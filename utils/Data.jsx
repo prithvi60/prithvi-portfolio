@@ -1,50 +1,37 @@
-import {
-    FaFacebook,
-    FaInstagram,
-    FaLinkedinIn,
-} from "react-icons/fa6";
-
-export const navLinks = [
-    { menu: "home", link: "/" },
-    { menu: "about", link: "/about" },
-    {
-        menu: "services",
-        subMenus: [
-            { menu: "service 1", link: "/services/service-1" },
-            { menu: "service 2", link: "/services/service-2" },
-        ],
-    },
-    { menu: "blog", link: "/blog" },
-];
-
-export const footerLinks1 = [
-    { menu: "Home", href: "/" },
-    { menu: "About", href: "/about" },
-    { menu: "Contact Us", href: "/contact" },
-];
-
-export const footerLinks2 = [
-    { menu: "service 1", href: "/services/service-1" },
-    { menu: "service 2", href: "/services/service-2" },
-    { menu: "blog", href: "/blog" },
-];
+import { FaLinkedin } from "react-icons/fa6";
+import { FaWhatsappSquare } from "react-icons/fa";
+import { AiOutlineGlobal } from "react-icons/ai";
+import { FiPhoneCall } from "react-icons/fi";
+import { MdAlternateEmail } from "react-icons/md";
 
 export const socialLinks = [
     {
         icon: (
-            <FaInstagram className="text-xl md:text-3xl text-black hover:text-black/70 hover:animate-pulse" />
+            <FaLinkedin className="text-2xl md:text-4xl hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5 text-primary-foreground" />
         ),
         href: "#",
     },
     {
         icon: (
-            <FaLinkedinIn className="text-xl md:text-3xl text-black hover:text-black/70 hover:animate-pulse" />
+            <FaWhatsappSquare className="text-2xl md:text-4xl text-primary-foreground hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5" />
         ),
         href: "#",
     },
     {
         icon: (
-            <FaFacebook className="text-xl md:text-3xl text-black hover:text-black/70 hover:animate-pulse" />
+            <MdAlternateEmail className="text-2xl md:text-4xl text-primary-foreground hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5" />
+        ),
+        href: "#",
+    },
+    {
+        icon: (
+            <AiOutlineGlobal className="text-2xl md:text-4xl text-primary-foreground hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5" />
+        ),
+        href: "#",
+    },
+    {
+        icon: (
+            <FiPhoneCall className="text-2xl md:text-4xl text-primary-foreground hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5" />
         ),
         href: "#",
     },

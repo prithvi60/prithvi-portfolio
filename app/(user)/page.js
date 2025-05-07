@@ -1,7 +1,11 @@
+import About from "@/components/layout/About";
+import Hero from "@/components/layout/Hero";
+
 export default function Home() {
   return (
-    <div className="grid grid-cols-1 items-center justify-items-center min-h-screen p-8 pb-20 gap-16 text-xl md:text-5xl sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <h4>Home</h4>
+    <div>
+      <Hero />
+      <About />
     </div>
   );
 }

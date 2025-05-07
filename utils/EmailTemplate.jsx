@@ -18,12 +18,11 @@ export function generateEmailTemplateForUser(mainContent, title) {
         }
            
             <p style="font-size: 16px;">
-                Cheers!<br>
-                Poornima T M,<br>
+                Prithvi,<br>
                 <a href="mailto:support@Business-Portfolio.com" style="color: #007bff; text-decoration: none;">support@Business-Portfolio.com</a><br>
-                Founder & C.E.O,
+                Founder,
             </p>
-            <div style="text-align: center; margin-top: 20px; font-size: 14px; color: #008080;">
+            <div style="text-align: center; margin-top: 20px; font-size: 14px;">
                 <p style="margin: 0;">
                     © ${new Date().getFullYear()} 
                     <span style="margin-left: 1.5px; margin-right: 1.5px;">
@@ -46,10 +45,9 @@ export function generateEmailTemplateForClient(mainContent) {
               ${mainContent}
               <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
               <p style="font-size: 16px;">
-                Cheers!<br>
-                Poornima T M,<br>
+                 Prithvi,<br>
                 <a href="mailto:support@Business-Portfolio.com" style="color: #007bff; text-decoration: none;">support@Business-Portfolio.com</a><br>
-                Founder & C.E.O,
+                Founder,
             </p>
               <div style="margin-bottom: 10px;">
                  <img src=${imageUrl} alt="Business Portfolio Logo" style="width: 90px; height: auto;">

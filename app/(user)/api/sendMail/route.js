@@ -15,7 +15,7 @@ const transporter = nodemailer.createTransport({
 });
 
 export async function POST(req) {
-  const { name, email, message, title } = await req.json();
+  const { name, email, message, title, phoneNo } = await req.json();
 
   const capitalized = title.charAt(0).toUpperCase() + title.slice(1);
 
@@ -23,15 +23,10 @@ export async function POST(req) {
   <p style="font-size: 16px; color: #555;"><strong>Valuable customer insights derived from ${title}:</strong></p>
             <p style="font-size: 16px; color: #555;"><strong>Name:</strong> ${name}</p>
             <p style="font-size: 16px; color: #555;"><strong>Email:</strong> ${email}</p>
-            ${
-              message !== ""
-                ? `
+            <p style="font-size: 16px; color: #555;"><strong>Phone Number:</strong> ${phoneNo}</p>
               <p style="font-size: 16px; color: #555;">
                 <strong>Message:</strong> ${message}
               </p>
-                `
-                : ""
-            }
   `;
 
   const messageForUser = `
