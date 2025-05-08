@@ -5,7 +5,7 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --primary: #ec1a1a;
+  --primary: #7e59d9;
   --secondary: #454444;
   --primary-foreground: #0a142f;
 }
@@ -16,6 +16,8 @@
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
+  --font-sourceCodePro: var(--font-sourceCodePro);
+  --font-ebGaramond: var(--font-ebGaramond);
 }
 
 @layer base {
@@ -38,4 +40,37 @@
 
 .slick-slide > div {
   margin: 0 10px !important;
+}
+
+.thumbnail::-webkit-scrollbar {
+  width: 8px;
+}
+
+.thumbnail::-webkit-scrollbar-track,
+.thumbnail2::-webkit-scrollbar-track {
+  box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+}
+
+.thumbnail::-webkit-scrollbar-thumb,
+.thumbnail2::-webkit-scrollbar-thumb {
+  background-color: #7e59d9;
+  outline: 1px solid #f5f5f5;
+  border-radius: 15px;
+}
+/* blinking animation cursor */
+.animated-text::after {
+  content: "|";
+  animation: blink 0.7s infinite;
+}
+@keyframes blink {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
 }

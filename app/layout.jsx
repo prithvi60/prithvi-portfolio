@@ -1,10 +1,22 @@
-import { Inter } from "next/font/google";
+import { EB_Garamond, Inter, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 
 
 const inter = Inter({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+const sourceCodePro = Source_Code_Pro({
+  variable: "--font-sourceCodePro",
+  subsets: ["latin"],
+  weight: ["400"]
+});
+
+const ebGaramond = EB_Garamond({
+  variable: "--font-ebGaramond",
+  subsets: ["latin"],
+  weight: ["400"]
 });
 
 export const metadata = {
@@ -57,7 +69,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${inter.className} antialiased`}
+        className={`${inter.className} ${sourceCodePro.variable} ${ebGaramond.variable} antialiased`}
       >
         {children}
       </body>

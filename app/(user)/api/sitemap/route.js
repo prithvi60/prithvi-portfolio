@@ -1,4 +1,3 @@
-import { client } from "@/sanity/lib/client";
 import { SitemapStream, streamToPromise } from "sitemap";
 import { Readable } from "stream";
 
@@ -27,17 +26,17 @@ export async function GET() {
 
   try {
     // Fetch dynamic routes from Sanity CMS with error handling
-    const posts = await client.fetch(
-      `*[_type == "post"]{ "url": slug.current }`
-    );
-    posts.forEach((post) => {
-      links.push({
-        url: `/resources/blog/${post.url}`,
-        changefreq: "weekly",
-        priority: 0.9,
-        lastmod: new Date().toISOString(),
-      });
-    });
+    // const posts = await client.fetch(
+    //   `*[_type == "post"]{ "url": slug.current }`
+    // );
+    // posts.forEach((post) => {
+    //   links.push({
+    //     url: `/resources/blog/${post.url}`,
+    //     changefreq: "weekly",
+    //     priority: 0.9,
+    //     lastmod: new Date().toISOString(),
+    //   });
+    // });
 
     const hostname = "https://webibee.com";
     if (!hostname) {

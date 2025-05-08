@@ -17,9 +17,9 @@ export const Modal = ({ title }) => {
                     setIsOpen(true);
                     setThank(false);
                 }}
-                className="rounded-lg border-2 border-solid border-white bg-primary px-2 py-2 md:py-3 md:px-4 font-semibold capitalize text-white text-base md:text-lg xl:text-xl transition-all duration-300 hover:scale-110 cursor-pointer"
+                className="rounded-lg border-2 border-solid border-black/70 px-4 py-3 font-normal capitalize text-black text-lg xl:text-xl transition-all duration-300 hover:scale-110 cursor-pointer font-sourceCodePro"
             >
-                Contact Us
+                GET IN TOUCH
             </button>
             <SpringModal
                 isOpen={isOpen}
@@ -32,13 +32,7 @@ export const Modal = ({ title }) => {
     );
 };
 
-export const SpringModal = ({
-    isOpen,
-    setIsOpen,
-    title,
-    thank,
-    setThank
-}) => {
+export const SpringModal = ({ isOpen, setIsOpen, title, thank, setThank }) => {
     const initialFormData = {
         name: "",
         email: "",
@@ -160,7 +154,6 @@ export const SpringModal = ({
                                                 onChange={handleChange}
                                                 placeholder="Name"
                                                 className="rounded-lg border-3 p-2 border-primary focus-within:border-2 focus-within:border-primary focus-within:outline-none w-full placeholder:text-sm placeholder:md:text-base"
-
                                             />
                                         </div>
                                         <div className="gap-2 flex flex-col  items-start">
