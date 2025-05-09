@@ -1,61 +1,98 @@
 "use client";
-import { GiSupersonicArrow } from "react-icons/gi";
-import React, {
-    useEffect,
-    useRef,
-    useState,
-    useCallback,
-    useMemo,
-} from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { FaCircleArrowUp } from "react-icons/fa6";
 import { dataLists, prompts } from "@/utils/Data";
 import { HashLoader } from "react-spinners";
 import { MdArrowCircleRight, MdError } from "react-icons/md";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { IoMdCloseCircle } from "react-icons/io";
+import { TypewriterText } from "../features/TypewriterText";
+import { renderDataListItems, renderPromptButtons } from "./OtherRenders";
+
 
 const Hero = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
-    const [finalPrompt, setFinalPrompt] = useState("");
-    const [promptResult, setPromptResult] = useState("");
+    const [inputMessage, setInputMessage] = useState("");
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
-    const [displayedText, setDisplayedText] = useState("");
+    const [messages, setMessages] = useState([]);
+    const [sessionId, setSessionId] = useState(null);
+    const [isAtBottom, setIsAtBottom] = useState(true);
     const resultRef = useRef(null);
 
     // Memoize the static data to prevent unnecessary re-renders
     const memoizedDataLists = useMemo(() => dataLists, []);
-    const memoizedPrompts = useMemo(() => prompts, []);
+    const memoizedPrompts = useMemo(() => prompts, [])
 
-    // Scroll to bottom when text updates
+
+    // Initialize session and messages from cookies/localStorage
     useEffect(() => {
-        if (resultRef.current) {
-            resultRef.current.scrollTop = resultRef.current.scrollHeight;
-        }
-    }, [displayedText]);
+        const getCookie = (name) => {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(";").shift();
+        };
 
-    // Animation effect for typewriter
-    useEffect(() => {
-        if (!promptResult || isLoading) return;
-
-        setDisplayedText("");
-        let index = 0;
-        const interval = setInterval(() => {
-            if (index < promptResult.length) {
-                setDisplayedText((prev) => prev + promptResult[index]);
-                index++;
-            } else {
-                clearInterval(interval);
+        const existingSessionId = getCookie("sessionId");
+        if (existingSessionId) {
+            setSessionId(existingSessionId);
+            const savedMessages = localStorage.getItem(
+                `chatMessages_${existingSessionId}`
+            );
+            if (savedMessages) {
+                try {
+                    const parsedMessages = JSON.parse(savedMessages);
+                    setMessages(parsedMessages);
+                } catch (e) {
+                    console.error("Failed to parse saved messages", e);
+                }
             }
-        }, 30);
+        }
+    }, []);
 
-        return () => clearInterval(interval);
-    }, [promptResult, isLoading]);
+    // Check if user is at the bottom of the chat container
+    const checkIfAtBottom = useCallback(() => {
+        if (resultRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = resultRef.current;
+            // Consider "at bottom" if within 50px of the bottom
+            const atBottom = scrollTop + clientHeight >= scrollHeight - 50;
+            setIsAtBottom(atBottom);
+        }
+    }, []);
+
+    // Add scroll event listener to track user scrolling
+    useEffect(() => {
+        const container = resultRef.current;
+        if (container) {
+            container.addEventListener("scroll", checkIfAtBottom);
+            return () => container.removeEventListener("scroll", checkIfAtBottom);
+        }
+    }, [checkIfAtBottom]);
+
+    // Smooth auto-scroll to bottom when messages update, if at bottom
+    useEffect(() => {
+        if (isAtBottom && resultRef.current) {
+            resultRef.current.scrollTo({
+                top: resultRef.current.scrollHeight,
+                behavior: "smooth",
+            });
+        }
+    }, [messages, isAtBottom]);
+
+    // Save messages to localStorage whenever they change
+    useEffect(() => {
+        if (sessionId && messages.length > 0) {
+            localStorage.setItem(
+                `chatMessages_${sessionId}`,
+                JSON.stringify(messages)
+            );
+        }
+    }, [messages, sessionId]);
 
     const handlePrompt = useCallback(
         (val) => {
-            setFinalPrompt(val);
+            setInputMessage(val);
             handleSubmit(val);
             if (isMobile) {
                 setIsOpen(false);
@@ -66,16 +103,20 @@ const Hero = () => {
     );
 
     const handleSubmit = useCallback(
-        async (promptValue = finalPrompt) => {
-            // Safely convert to string and trim
+        async (promptValue = inputMessage) => {
             const safePrompt = String(promptValue || "").trim();
             if (!safePrompt || isLoading) return;
 
             setIsLoading(true);
             setError(null);
-            setFinalPrompt("");
-            setPromptResult("");
-            setDisplayedText("");
+
+            const userMessage = {
+                role: "user",
+                content: safePrompt,
+            };
+
+            setMessages((prev) => [...prev, userMessage]);
+            setInputMessage("");
 
             try {
                 const response = await fetch("/api/chat", {
@@ -84,6 +125,7 @@ const Hero = () => {
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({ prompt: safePrompt }),
+                    credentials: "include",
                 });
 
                 if (!response.ok) {
@@ -92,18 +134,34 @@ const Hero = () => {
                 }
 
                 const data = await response.json();
-                // console.log(data);
 
-                setPromptResult(data.result);
+                if (data.sessionId && !sessionId) {
+                    setSessionId(data.sessionId);
+                }
+
+                const aiMessage = {
+                    role: "assistant",
+                    content: data.result,
+                };
+
+                setMessages((prev) => [...prev, aiMessage]);
             } catch (err) {
-                setError(err.message);
-                console.error("API Error:", err);
+                const error = err;
+                setError(error.message);
+                console.error("API Error:", error);
             } finally {
                 setIsLoading(false);
             }
         },
-        [finalPrompt, isLoading]
+        [inputMessage, isLoading, sessionId]
     );
+
+    const clearConversation = useCallback(() => {
+        setMessages([]);
+        if (sessionId) {
+            localStorage.removeItem(`chatMessages_${sessionId}`);
+        }
+    }, [sessionId]);
 
     const handleKeyDown = useCallback(
         (e) => {
@@ -120,82 +178,17 @@ const Hero = () => {
         setIsMobile(true);
     }, []);
 
-    // Memoize the prompt buttons to prevent unnecessary re-renders
-    const renderPromptButtons = useMemo(
-        () =>
-            memoizedPrompts.map((list, idx) => (
-                <button
-                    key={idx}
-                    className="p-5 rounded-xl border-2 border-white backdrop-blur-xl bg-white/10 text-sm font-medium text-start hover:scale-105 transition-all duration-300 cursor-pointer"
-                    onClick={() => handlePrompt(list)}
-                >
-                    {list}
-                </button>
-            )),
+    // Memoize the prompt buttons and data list items
+    const memoizedPromptButtons = useMemo(
+        () => renderPromptButtons(memoizedPrompts, handlePrompt),
         [memoizedPrompts, handlePrompt]
     );
 
-    // Memoize the data list items
-    const renderDataListItems = useMemo(
-        () =>
-            memoizedDataLists.map((list, idx) => {
-                const styles = {
-                    Development: {
-                        bg: "bg-[#FFDD8F]",
-                        text: "text-[#B86500]",
-                        icon: {
-                            color: "text-[#FFC379]",
-                            bg: "bg-[#FF8C00]",
-                        },
-                    },
-                    Branding: {
-                        bg: "bg-[#FF8FDB]",
-                        text: "text-[#B80040]",
-                        icon: {
-                            color: "text-[#FF79C7]",
-                            bg: "bg-[#FF006A]",
-                        },
-                    },
-                    Design: {
-                        bg: "bg-[#8FB2FF]",
-                        text: "text-[#0C00B8]",
-                        icon: {
-                            color: "text-[#79BCFF]",
-                            bg: "bg-[#0000FF]",
-                        },
-                    },
-                    default: {
-                        bg: "bg-[#57BD6A]",
-                        text: "text-[#136318]",
-                        icon: {
-                            color: "text-[#48C046]",
-                            bg: "bg-[#0B8900]",
-                        },
-                    },
-                };
-
-                const style = styles[list] || styles.default;
-
-                return (
-                    <div
-                        className={`flex items-center gap-2 p-1.5 sm:p-3 rounded-xl w-full ${style.bg}`}
-                        key={idx}
-                    >
-                        <span className="shrink-0">
-                            <GiSupersonicArrow
-                                className={`${style.icon.color} ${style.icon.bg} text-base md:text-lg size-8 md:size-10 rounded-xl p-2`}
-                            />
-                        </span>
-                        <h2
-                            className={`text-sm md:text-base tracking-wide font-semibold ${style.text}`}
-                        >
-                            {list}
-                        </h2>
-                    </div>
-                );
-            }),
+    const memoizedDataListItems = useMemo(
+        () => renderDataListItems(memoizedDataLists),
         [memoizedDataLists]
     );
+
 
     return (
         <section
@@ -203,7 +196,6 @@ const Hero = () => {
             style={{ backgroundImage: "url(/hero-bg.png)" }}
         >
             <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
-                {/* Mobile Prompt Toggle */}
                 <div
                     className="flex lg:hidden items-center gap-1 w-full justify-start px-2 pb-2 pt-5 cursor-pointer"
                     onClick={toggleMobileMenu}
@@ -212,7 +204,6 @@ const Hero = () => {
                     <p className="text-sm md:text-base tracking-wide font-medium">{`Prompts (${memoizedPrompts.length})`}</p>
                 </div>
 
-                {/* Mobile Prompt Menu */}
                 <motion.div
                     className="left-0 z-20 absolute top-0 w-full h-screen bg-primary text-white"
                     initial={{ x: "-100%" }}
@@ -230,15 +221,14 @@ const Hero = () => {
                     </div>
                     <div className="w-full max-h-[80vh] thumbnail overflow-y-scroll border-white px-5 pt-7 pb-12">
                         <div className="grid grid-cols-1 space-y-4">
-                            {renderPromptButtons}
+                            {memoizedPromptButtons}
                         </div>
                     </div>
                 </motion.div>
 
-                {/* Main Content Area */}
                 <div className="w-full h-full lg:w-3/5 xl:w-[70%] space-y-5 md:space-y-10 lg:py-6 sm:mx-5">
-                    {!promptResult && !isLoading ? (
-                        <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5">
+                    {messages.length === 0 && !isLoading ? (
+                        <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
                                     Hello there!
@@ -247,50 +237,84 @@ const Hero = () => {
                                     All about the work, the story, and the people behind it.
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full max-w-xl mx-auto">
-                                    {renderDataListItems}
+                                    {memoizedDataListItems}
                                 </div>
                             </div>
                         </div>
                     ) : (
-                        <>
-                            {isLoading ? (
-                                <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
-                                    <div className="text-base md:text-lg text-white animate-pulse flex items-center gap-2 font-medium p-2.5">
-                                        <HashLoader color="#7e59d9" size={25} />
-                                        <p>Generating response...</p>
-                                    </div>
-                                </div>
-                            ) : (
-                                <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
-                                    <div
-                                        ref={resultRef}
-                                        className="p-5 max-h-[60vh] md:max-h-[60vh] overflow-y-auto no_scrollbar"
-                                    >
-                                        {isLoading ? (
-                                            <div className="text-md text-white animate-pulse flex items-center gap-2 font-medium">
-                                                <HashLoader color="#7e59d9" size={25} />
-                                                <p>Generating response...</p>
-                                            </div>
-                                        ) : error ? (
-                                            <div className="text-md text-red-500 flex items-center gap-2 font-medium">
-                                                <MdError className="text-red-400 animate-pulse text-xl md:text-2xl" />
-                                                <p>{error}</p>
-                                            </div>
-                                        ) : (
-                                            <p className="text-white whitespace-pre-wrap animated-text font-normal">
-                                                {displayedText
-                                                    ?.toString()
-                                                    .replace(/undefined$/, "")
-                                                    .trim()}
-                                            </p>
-                                        )}
-                                    </div>
-                                </div>
+                        <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
+                            {messages.length > 0 && (
+                                <button
+                                    onClick={clearConversation}
+                                    className="absolute top-2 right-2 text-xs bg-red-500/30 hover:bg-red-500/50 text-white px-2 py-1 rounded cursor-pointer"
+                                >
+                                    Clear
+                                </button>
                             )}
-                        </>
+                            <div
+                                ref={resultRef}
+                                className="p-5 max-h-[60vh] md:max-h-[60vh] overflow-y-auto no_scrollbar space-y-4"
+                            >
+                                <AnimatePresence>
+                                    {messages.map((message, index) => (
+                                        <motion.div
+                                            key={index}
+                                            className={`flex ${message.role === "user"
+                                                ? "justify-end"
+                                                : "justify-start"
+                                                }`}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={{ opacity: 0, y: -10 }}
+                                            transition={{ duration: 0.3 }}
+                                        >
+                                            <div
+                                                className={`max-w-[80%] rounded-lg p-3 ${message.role === "user"
+                                                    ? "bg-blue-500/30 border border-blue-400"
+                                                    : "bg-purple-500/30 border border-purple-400"
+                                                    }`}
+                                            >
+                                                {message.role === "assistant" ? (
+                                                    <TypewriterText
+                                                        text={message.content}
+                                                        scrollContainerRef={resultRef}
+                                                    />
+                                                ) : (
+                                                    <p className="text-white whitespace-pre-wrap">
+                                                        {message.content}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </motion.div>
+                                    ))}
+                                </AnimatePresence>
+                                {isLoading && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-[80%] rounded-lg p-3 bg-purple-500/30 border border-purple-400">
+                                            <div className="text-white flex items-center gap-2">
+                                                <HashLoader
+                                                    color="#7e59d9"
+                                                    size={20}
+                                                />
+                                                <span>Thinking...</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                                {error && (
+                                    <div className="flex justify-start">
+                                        <div className="max-w-[80%] rounded-lg p-3 bg-red-500/30 border border-red-400">
+                                            <div className="text-red-300 flex items-center gap-2">
+                                                <MdError className="text-xl" />
+                                                <span>{error}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     )}
 
-                    {/* Input Area */}
                     <div className="fixed left-4 sm:left-10 bottom-5 w-full max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-lg xl:max-w-3xl mx-auto bg-[#E8E8E8] px-4 py-3 border-t shadow-md rounded-xl">
                         <div className="flex items-center space-x-2">
                             <textarea
@@ -298,15 +322,15 @@ const Hero = () => {
                                 id="prompt-input"
                                 name="prompt"
                                 rows={1}
-                                value={finalPrompt}
-                                onChange={(e) => setFinalPrompt(e.target.value)}
+                                value={inputMessage}
+                                onChange={(e) => setInputMessage(e.target.value)}
                                 onKeyDown={handleKeyDown}
                                 required
                                 autoFocus
                                 disabled={isLoading}
-                                placeholder="Summarize the latest!"
+                                placeholder="Type your message..."
                                 className={`${isLoading ? "opacity-70" : ""
-                                    } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black over font-normal no_scrollbar`}
+                                    } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black font-normal no_scrollbar`}
                             />
                             <button
                                 className={`${isLoading ? "opacity-50" : ""
@@ -321,14 +345,13 @@ const Hero = () => {
                     </div>
                 </div>
 
-                {/* Desktop Prompt Menu */}
                 <div className="w-full h-full hidden lg:block lg:w-2/5 xl:w-[30%] overflow-hidden">
                     <p className="text-base font-medium capitalize p-5 border-s border-white">
                         {`Prompts (${memoizedPrompts.length})`}
                     </p>
                     <div className="w-full max-h-[80vh] thumbnail overflow-y-scroll border-s border-white border-y px-5 pt-7 pb-12">
                         <div className="grid grid-cols-1 space-y-4">
-                            {renderPromptButtons}
+                            {memoizedPromptButtons}
                         </div>
                     </div>
                 </div>
