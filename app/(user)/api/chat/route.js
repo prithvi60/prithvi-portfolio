@@ -78,6 +78,7 @@ export async function POST(request) {
       {
         result: aiResponse,
         conversationHistory: updatedMessages,
+        sessionId,
       },
       {
         headers: responseHeaders,

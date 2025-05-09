@@ -26,31 +26,6 @@ const Hero = () => {
     const memoizedPrompts = useMemo(() => prompts, [])
 
 
-    // Initialize session and messages from cookies/localStorage
-    useEffect(() => {
-        const getCookie = (name) => {
-            const value = `; ${document.cookie}`;
-            const parts = value.split(`; ${name}=`);
-            if (parts.length === 2) return parts.pop().split(";").shift();
-        };
-
-        const existingSessionId = getCookie("sessionId");
-        if (existingSessionId) {
-            setSessionId(existingSessionId);
-            const savedMessages = localStorage.getItem(
-                `chatMessages_${existingSessionId}`
-            );
-            if (savedMessages) {
-                try {
-                    const parsedMessages = JSON.parse(savedMessages);
-                    setMessages(parsedMessages);
-                } catch (e) {
-                    console.error("Failed to parse saved messages", e);
-                }
-            }
-        }
-    }, []);
-
     // Check if user is at the bottom of the chat container
     const checkIfAtBottom = useCallback(() => {
         if (resultRef.current) {
@@ -110,51 +85,93 @@ const Hero = () => {
             setIsLoading(true);
             setError(null);
 
-            const userMessage = {
-                role: "user",
-                content: safePrompt,
-            };
-
+            // Add user message immediately
+            const userMessage = { role: "user", content: safePrompt };
             setMessages((prev) => [...prev, userMessage]);
             setInputMessage("");
 
             try {
+                // Prepare request with current session (if exists)
+                const requestBody = { prompt: safePrompt };
+                if (sessionId) {
+                    requestBody.sessionId = sessionId;
+                }
+
                 const response = await fetch("/api/chat", {
                     method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({ prompt: safePrompt }),
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestBody),
                     credentials: "include",
                 });
 
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const errorData = await response.json().catch(() => ({}));
                     throw new Error(errorData.error || "Request failed");
                 }
 
                 const data = await response.json();
 
+                // Handle new session creation
                 if (data.sessionId && !sessionId) {
+                    // Store sessionId with 1-day expiration
+                    const sessionData = {
+                        id: data.sessionId,
+                        expires: new Date().getTime() + 24 * 60 * 60 * 1000, // 1 day
+                    };
+                    localStorage.setItem("sessionData", JSON.stringify(sessionData));
                     setSessionId(data.sessionId);
                 }
 
-                const aiMessage = {
-                    role: "assistant",
-                    content: data.result,
-                };
-
+                // Add AI response
+                const aiMessage = { role: "assistant", content: data.result };
                 setMessages((prev) => [...prev, aiMessage]);
+
+                // Persist full conversation
+                if (data.sessionId || sessionId) {
+                    const currentSessionId = data.sessionId || sessionId;
+                    const conversation = [...messages, userMessage, aiMessage];
+                    localStorage.setItem(
+                        `chat_${currentSessionId}`,
+                        JSON.stringify({
+                            messages: conversation,
+                            lastUpdated: Date.now(),
+                        })
+                    );
+                }
             } catch (err) {
-                const error = err;
-                setError(error.message);
-                console.error("API Error:", error);
+                console.error("API Error:", err);
+                setError(err.message);
             } finally {
                 setIsLoading(false);
             }
         },
-        [inputMessage, isLoading, sessionId]
+        [inputMessage, isLoading, sessionId, messages]
     );
+
+    // Add this useEffect to check for expired sessions on component mount
+    useEffect(() => {
+        const sessionData = localStorage.getItem("sessionData");
+        if (sessionData) {
+            const { id, expires } = JSON.parse(sessionData);
+            if (expires > Date.now()) {
+                setSessionId(id);
+                // Load saved messages
+                const savedChat = localStorage.getItem(`chat_${id}`);
+                if (savedChat) {
+                    try {
+                        const { messages } = JSON.parse(savedChat);
+                        setMessages(messages || []);
+                    } catch (e) {
+                        console.error("Failed to parse saved messages", e);
+                    }
+                }
+            } else {
+                // Clear expired session
+                localStorage.removeItem("sessionData");
+                localStorage.removeItem(`chat_${id}`);
+            }
+        }
+    }, []);
 
     const clearConversation = useCallback(() => {
         setMessages([]);
