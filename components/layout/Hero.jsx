@@ -1,6 +1,12 @@
 "use client";
 import { GiSupersonicArrow } from "react-icons/gi";
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, {
+    useEffect,
+    useRef,
+    useState,
+    useCallback,
+    useMemo,
+} from "react";
 import { FaCircleArrowUp } from "react-icons/fa6";
 import { dataLists, prompts } from "@/utils/Data";
 import { HashLoader } from "react-spinners";
@@ -37,7 +43,7 @@ const Hero = () => {
         let index = 0;
         const interval = setInterval(() => {
             if (index < promptResult.length) {
-                setDisplayedText(prev => prev + promptResult[index]);
+                setDisplayedText((prev) => prev + promptResult[index]);
                 index++;
             } else {
                 clearInterval(interval);
@@ -47,15 +53,17 @@ const Hero = () => {
         return () => clearInterval(interval);
     }, [promptResult, isLoading]);
 
-    const handlePrompt = useCallback((val) => {
-        setFinalPrompt(val);
-        handleSubmit(val);
-        if (isMobile) {
-            setIsOpen(false);
-            setIsMobile(false);
-        }
-    }, [isMobile]);
-
+    const handlePrompt = useCallback(
+        (val) => {
+            setFinalPrompt(val);
+            handleSubmit(val);
+            if (isMobile) {
+                setIsOpen(false);
+                setIsMobile(false);
+            }
+        },
+        [isMobile]
+    );
 
     // const handleSubmit = useCallback(async (promptValue = finalPrompt) => {
     //     const trimmedPrompt = promptValue.trim();
@@ -102,127 +110,137 @@ const Hero = () => {
     //     }
     // }, [finalPrompt]);
 
+    const handleSubmit = useCallback(
+        async (promptValue = finalPrompt) => {
+            // Safely convert to string and trim
+            const safePrompt = String(promptValue || "").trim();
+            if (!safePrompt || isLoading) return;
 
-    const handleSubmit = useCallback(async (promptValue = finalPrompt) => {
-        // Safely convert to string and trim
-        const safePrompt = String(promptValue || "").trim();
-        if (!safePrompt) return;
+            setIsLoading(true);
+            setError(null);
+            setFinalPrompt("");
+            setPromptResult("");
+            setDisplayedText("");
 
-        setIsLoading(true);
-        setError(null);
-        setFinalPrompt("");
-        setPromptResult("");
-        setDisplayedText("");
+            try {
+                const response = await fetch("/api/chat", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ prompt: safePrompt }),
+                });
 
-        try {
-            const response = await fetch("/api/chat", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ prompt: safePrompt }),
-            });
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Request failed");
+                }
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Request failed");
+                const data = await response.json();
+                // console.log(data);
+
+                setPromptResult(data.result);
+            } catch (err) {
+                setError(err.message);
+                console.error("API Error:", err);
+            } finally {
+                setIsLoading(false);
             }
+        },
+        [finalPrompt, isLoading]
+    );
 
-            const data = await response.json();
-            console.log(data);
-
-            setPromptResult(data.result);
-
-        } catch (err) {
-            setError(err.message);
-            console.error("API Error:", err);
-        } finally {
-            setIsLoading(false);
-        }
-    }, [finalPrompt]);
-
-    const handleKeyDown = useCallback((e) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            handleSubmit();
-        }
-    }, [handleSubmit]);
+    const handleKeyDown = useCallback(
+        (e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                handleSubmit();
+            }
+        },
+        [handleSubmit]
+    );
 
     const toggleMobileMenu = useCallback(() => {
-        setIsOpen(prev => !prev);
+        setIsOpen((prev) => !prev);
         setIsMobile(true);
     }, []);
 
     // Memoize the prompt buttons to prevent unnecessary re-renders
-    const renderPromptButtons = useMemo(() =>
-        memoizedPrompts.map((list, idx) => (
-            <button
-                key={idx}
-                className="p-5 rounded-xl border-2 border-white backdrop-blur-xl bg-white/10 text-sm font-medium text-start hover:scale-105 transition-all duration-300 cursor-pointer"
-                onClick={() => handlePrompt(list)}
-            >
-                {list}
-            </button>
-        )),
-        [memoizedPrompts, handlePrompt]);
+    const renderPromptButtons = useMemo(
+        () =>
+            memoizedPrompts.map((list, idx) => (
+                <button
+                    key={idx}
+                    className="p-5 rounded-xl border-2 border-white backdrop-blur-xl bg-white/10 text-sm font-medium text-start hover:scale-105 transition-all duration-300 cursor-pointer"
+                    onClick={() => handlePrompt(list)}
+                >
+                    {list}
+                </button>
+            )),
+        [memoizedPrompts, handlePrompt]
+    );
 
     // Memoize the data list items
-    const renderDataListItems = useMemo(() =>
-        memoizedDataLists.map((list, idx) => {
-            const styles = {
-                Development: {
-                    bg: "bg-[#FFDD8F]",
-                    text: "text-[#B86500]",
-                    icon: {
-                        color: "text-[#FFC379]",
-                        bg: "bg-[#FF8C00]"
-                    }
-                },
-                Branding: {
-                    bg: "bg-[#FF8FDB]",
-                    text: "text-[#B80040]",
-                    icon: {
-                        color: "text-[#FF79C7]",
-                        bg: "bg-[#FF006A]"
-                    }
-                },
-                Design: {
-                    bg: "bg-[#8FB2FF]",
-                    text: "text-[#0C00B8]",
-                    icon: {
-                        color: "text-[#79BCFF]",
-                        bg: "bg-[#0000FF]"
-                    }
-                },
-                default: {
-                    bg: "bg-[#57BD6A]",
-                    text: "text-[#136318]",
-                    icon: {
-                        color: "text-[#48C046]",
-                        bg: "bg-[#0B8900]"
-                    }
-                }
-            };
+    const renderDataListItems = useMemo(
+        () =>
+            memoizedDataLists.map((list, idx) => {
+                const styles = {
+                    Development: {
+                        bg: "bg-[#FFDD8F]",
+                        text: "text-[#B86500]",
+                        icon: {
+                            color: "text-[#FFC379]",
+                            bg: "bg-[#FF8C00]",
+                        },
+                    },
+                    Branding: {
+                        bg: "bg-[#FF8FDB]",
+                        text: "text-[#B80040]",
+                        icon: {
+                            color: "text-[#FF79C7]",
+                            bg: "bg-[#FF006A]",
+                        },
+                    },
+                    Design: {
+                        bg: "bg-[#8FB2FF]",
+                        text: "text-[#0C00B8]",
+                        icon: {
+                            color: "text-[#79BCFF]",
+                            bg: "bg-[#0000FF]",
+                        },
+                    },
+                    default: {
+                        bg: "bg-[#57BD6A]",
+                        text: "text-[#136318]",
+                        icon: {
+                            color: "text-[#48C046]",
+                            bg: "bg-[#0B8900]",
+                        },
+                    },
+                };
 
-            const style = styles[list] || styles.default;
+                const style = styles[list] || styles.default;
 
-            return (
-                <div
-                    className={`flex items-center gap-2 p-1.5 sm:p-3 rounded-xl w-full ${style.bg}`}
-                    key={idx}
-                >
-                    <span className="shrink-0">
-                        <GiSupersonicArrow
-                            className={`${style.icon.color} ${style.icon.bg} text-base md:text-lg size-8 md:size-10 rounded-xl p-2`}
-                        />
-                    </span>
-                    <h2 className={`text-sm md:text-base tracking-wide font-semibold ${style.text}`}>
-                        {list}
-                    </h2>
-                </div>
-            );
-        }),
-        [memoizedDataLists]);
+                return (
+                    <div
+                        className={`flex items-center gap-2 p-1.5 sm:p-3 rounded-xl w-full ${style.bg}`}
+                        key={idx}
+                    >
+                        <span className="shrink-0">
+                            <GiSupersonicArrow
+                                className={`${style.icon.color} ${style.icon.bg} text-base md:text-lg size-8 md:size-10 rounded-xl p-2`}
+                            />
+                        </span>
+                        <h2
+                            className={`text-sm md:text-base tracking-wide font-semibold ${style.text}`}
+                        >
+                            {list}
+                        </h2>
+                    </div>
+                );
+            }),
+        [memoizedDataLists]
+    );
 
     return (
         <section
@@ -248,7 +266,10 @@ const Hero = () => {
                 >
                     <div className="flex justify-between items-center border-b-2 border-white p-5">
                         <p className="text-base font-medium capitalize">{`Prompts (${memoizedPrompts.length})`}</p>
-                        <span className="bg-white rounded-full" onClick={() => setIsOpen(false)}>
+                        <span
+                            className="bg-white rounded-full"
+                            onClick={() => setIsOpen(false)}
+                        >
                             <IoMdCloseCircle className="text-xl text-red-700" />
                         </span>
                     </div>
@@ -261,7 +282,7 @@ const Hero = () => {
 
                 {/* Main Content Area */}
                 <div className="w-full h-full lg:w-3/5 xl:w-[70%] space-y-5 md:space-y-10 lg:py-6 sm:mx-5">
-                    {!promptResult ? (
+                    {!promptResult && !isLoading ? (
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
@@ -276,28 +297,42 @@ const Hero = () => {
                             </div>
                         </div>
                     ) : (
-                        <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
-                            <div
-                                ref={resultRef}
-                                className="p-5 max-h-[60vh] md:max-h-[60vh] overflow-y-auto no_scrollbar"
-                            >
-                                {isLoading ? (
-                                    <div className="text-md text-white animate-pulse flex items-center gap-2 font-medium">
+                        <>
+                            {isLoading ? (
+                                <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
+                                    <div className="text-base md:text-lg text-white animate-pulse flex items-center gap-2 font-medium p-2.5">
                                         <HashLoader color="#7e59d9" size={25} />
                                         <p>Generating response...</p>
                                     </div>
-                                ) : error ? (
-                                    <div className="text-md text-red-500 flex items-center gap-2 font-medium">
-                                        <MdError className="text-red-400 animate-pulse text-xl md:text-2xl" />
-                                        <p>{error}</p>
+                                </div>
+                            ) : (
+                                <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
+                                    <div
+                                        ref={resultRef}
+                                        className="p-5 max-h-[60vh] md:max-h-[60vh] overflow-y-auto no_scrollbar"
+                                    >
+                                        {isLoading ? (
+                                            <div className="text-md text-white animate-pulse flex items-center gap-2 font-medium">
+                                                <HashLoader color="#7e59d9" size={25} />
+                                                <p>Generating response...</p>
+                                            </div>
+                                        ) : error ? (
+                                            <div className="text-md text-red-500 flex items-center gap-2 font-medium">
+                                                <MdError className="text-red-400 animate-pulse text-xl md:text-2xl" />
+                                                <p>{error}</p>
+                                            </div>
+                                        ) : (
+                                            <p className="text-white whitespace-pre-wrap animated-text font-normal">
+                                                {displayedText
+                                                    ?.toString()
+                                                    .replace(/undefined$/, "")
+                                                    .trim()}
+                                            </p>
+                                        )}
                                     </div>
-                                ) : (
-                                    <p className="text-white whitespace-pre-wrap animated-text font-normal">
-                                        {displayedText?.toString().replace(/undefined$/, "").trim()}
-                                    </p>
-                                )}
-                            </div>
-                        </div>
+                                </div>
+                            )}
+                        </>
                     )}
 
                     {/* Input Area */}
@@ -315,10 +350,12 @@ const Hero = () => {
                                 autoFocus
                                 disabled={isLoading}
                                 placeholder="Summarize the latest!"
-                                className="resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black over font-normal no_scrollbar"
+                                className={`${isLoading ? "opacity-70" : ""
+                                    } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black over font-normal no_scrollbar`}
                             />
                             <button
-                                className="absolute top-1/2 -translate-y-1/2 right-2 sm:right-5"
+                                className={`${isLoading ? "opacity-50" : ""
+                                    } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
                                 onClick={() => handleSubmit()}
                                 aria-label="Submit prompt"
                                 disabled={isLoading}

@@ -24,8 +24,8 @@ export async function POST(request) {
     });
 
     return NextResponse.json({
-      //   result: response.choices[0]?.message?.content || "No response from AI",
-      result: response || "No response from AI",
+      result: response.choices[0]?.message?.content || "No response from AI",
+      //   result: response || "No response from AI",
     });
   } catch (error) {
     console.error("OpenAI API error:", error);
