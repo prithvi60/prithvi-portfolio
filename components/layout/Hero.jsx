@@ -65,51 +65,6 @@ const Hero = () => {
         [isMobile]
     );
 
-    // const handleSubmit = useCallback(async (promptValue = finalPrompt) => {
-    //     const trimmedPrompt = promptValue.trim();
-    //     if (!trimmedPrompt) return;
-
-    //     setIsLoading(true);
-    //     setError(null);
-    //     setFinalPrompt("");
-    //     setPromptResult("");
-    //     setDisplayedText("");
-
-    //     try {
-    //         // Simulated response for demo purposes
-    //         setPromptResult(
-    //             "The India-Pakistan conflict, rooted in the 1947 Partition of British India, has shaped decades of hostility, primarily over the disputed region of Jammu and Kashmir. The Partition created Hindu-majority India and Muslim-majority Pakistan, leaving princely states like Kashmir to choose their allegiance. Kashmir’s Hindu ruler, Maharaja Hari Singh, initially sought independence but acceded to India amid an invasion by Pakistani-backed tribesmen, sparking the First Indo-Pakistani War (1947–48). The conflict ended with a UN-brokered ceasefire, establishing a Line of Control (LoC) that divided Kashmir, leaving India with two-thirds, including the Kashmir Valley, and Pakistan controlling the rest. This unresolved division fueled subsequent wars in 1965 and 1999 (Kargil War), both centered on Kashmir, with the 1965 war ending in a stalemate and Kargil seeing India reclaim infiltrated territories. The 1971 war, distinct in its focus, arose from East Pakistan’s independence movement, leading to India’s decisive victory and the creation of Bangladesh. Communal violence during Partition, claiming up to two million lives, and the displacement of millions further entrenched mutual distrust. The conflict escalated with nuclear dimensions after India’s 1974 nuclear test and Pakistan’s 1998 response, raising global fears of escalation, especially during Kargil, when nuclear rhetoric surfaced. The Siachen Glacier conflict (1984–2003) and frequent border skirmishes, like the 2001–02 standoff and 2019 Pulwama-Balakot clashes, highlight ongoing tensions. Kashmir’s majority-Muslim population, often favoring independence or Pakistani alignment, has driven insurgencies since 1989, with India alleging Pakistani support for terrorism—a charge Pakistan denies. Recent events, such as the April 2025 Pahalgam attack killing 26 tourists, have reignited war rhetoric, with India suspending the Indus Waters Treaty and both nations exchanging fire across the LoC. Nuclear deterrence has prevented all-out war since 1971, but the absence of robust diplomatic channels and Pakistan’s economic fragility increase miscalculation risks. The international community, including the UN and U.S., has repeatedly intervened, yet a promised plebiscite for Kashmir’s self-determination remains unfulfilled, perpetuating local grievances. Both nations’ military modernization and regional alliances—India with the U.S. and Pakistan with China—complicate de-escalation."
-    //         );
-
-    //         // Uncomment for actual API call
-    //         /*
-    //         const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    //             method: "POST",
-    //             headers: {
-    //                 "Content-Type": "application/json",
-    //                 "Authorization": `Bearer ${process.env.NEXT_PUBLIC_OPENAI_API_KEY}`
-    //             },
-    //             body: JSON.stringify({
-    //                 model: "gpt-3.5-turbo-0125",
-    //                 messages: [{ role: "user", content: trimmedPrompt }],
-    //                 temperature: 0.7,
-    //                 max_tokens: 1000
-    //             })
-    //         });
-
-    //         if (!response.ok) throw new Error(`API request failed with status ${response.status}`);
-
-    //         const data = await response.json();
-    //         setPromptResult(data.choices[0]?.message?.content || "No response from AI");
-    //         */
-    //     } catch (err) {
-    //         setError(err.message);
-    //         console.error("Error calling OpenAI API:", err);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // }, [finalPrompt]);
-
     const handleSubmit = useCallback(
         async (promptValue = finalPrompt) => {
             // Safely convert to string and trim
