@@ -1,5 +1,11 @@
 "use client";
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, {
+    useEffect,
+    useRef,
+    useState,
+    useCallback,
+    useMemo,
+} from "react";
 import { FaCircleArrowUp } from "react-icons/fa6";
 import { dataLists, prompts } from "@/utils/Data";
 import { HashLoader } from "react-spinners";
@@ -8,7 +14,6 @@ import { motion, AnimatePresence } from "framer-motion";
 import { IoMdCloseCircle } from "react-icons/io";
 import { TypewriterText } from "../features/TypewriterText";
 import { renderDataListItems, renderPromptButtons } from "./OtherRenders";
-
 
 const Hero = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -23,8 +28,7 @@ const Hero = () => {
 
     // Memoize the static data to prevent unnecessary re-renders
     const memoizedDataLists = useMemo(() => dataLists, []);
-    const memoizedPrompts = useMemo(() => prompts, [])
-
+    const memoizedPrompts = useMemo(() => prompts, []);
 
     // Check if user is at the bottom of the chat container
     const checkIfAtBottom = useCallback(() => {
@@ -54,16 +58,6 @@ const Hero = () => {
             });
         }
     }, [messages, isAtBottom]);
-
-    // Save messages to localStorage whenever they change
-    useEffect(() => {
-        if (sessionId && messages.length > 0) {
-            localStorage.setItem(
-                `chatMessages_${sessionId}`,
-                JSON.stringify(messages)
-            );
-        }
-    }, [messages, sessionId]);
 
     const handlePrompt = useCallback(
         (val) => {
@@ -112,32 +106,32 @@ const Hero = () => {
                 const data = await response.json();
 
                 // Handle new session creation
-                if (data.sessionId && !sessionId) {
-                    // Store sessionId with 1-day expiration
-                    const sessionData = {
-                        id: data.sessionId,
-                        expires: new Date().getTime() + 24 * 60 * 60 * 1000, // 1 day
-                    };
-                    localStorage.setItem("sessionData", JSON.stringify(sessionData));
-                    setSessionId(data.sessionId);
-                }
+                // if (data.sessionId && !sessionId) {
+                //     // Store sessionId with 1-day expiration
+                //     const sessionData = {
+                //         id: data.sessionId,
+                //         expires: new Date().getTime() + 24 * 60 * 60 * 1000, // 1 day
+                //     };
+                //     localStorage.setItem("sessionData", JSON.stringify(sessionData));
+                //     setSessionId(data.sessionId);
+                // }
 
                 // Add AI response
                 const aiMessage = { role: "assistant", content: data.result };
                 setMessages((prev) => [...prev, aiMessage]);
 
                 // Persist full conversation
-                if (data.sessionId || sessionId) {
-                    const currentSessionId = data.sessionId || sessionId;
-                    const conversation = [...messages, userMessage, aiMessage];
-                    localStorage.setItem(
-                        `chat_${currentSessionId}`,
-                        JSON.stringify({
-                            messages: conversation,
-                            lastUpdated: Date.now(),
-                        })
-                    );
-                }
+                // if (data.sessionId || sessionId) {
+                //     const currentSessionId = data.sessionId || sessionId;
+                //     const conversation = [...messages, userMessage, aiMessage];
+                //     localStorage.setItem(
+                //         `chat_${currentSessionId}`,
+                //         JSON.stringify({
+                //             messages: conversation,
+                //             lastUpdated: Date.now(),
+                //         })
+                //     );
+                // }
             } catch (err) {
                 console.error("API Error:", err);
                 setError(err.message);
@@ -147,38 +141,6 @@ const Hero = () => {
         },
         [inputMessage, isLoading, sessionId, messages]
     );
-
-    // Add this useEffect to check for expired sessions on component mount
-    useEffect(() => {
-        const sessionData = localStorage.getItem("sessionData");
-        if (sessionData) {
-            const { id, expires } = JSON.parse(sessionData);
-            if (expires > Date.now()) {
-                setSessionId(id);
-                // Load saved messages
-                const savedChat = localStorage.getItem(`chat_${id}`);
-                if (savedChat) {
-                    try {
-                        const { messages } = JSON.parse(savedChat);
-                        setMessages(messages || []);
-                    } catch (e) {
-                        console.error("Failed to parse saved messages", e);
-                    }
-                }
-            } else {
-                // Clear expired session
-                localStorage.removeItem("sessionData");
-                localStorage.removeItem(`chat_${id}`);
-            }
-        }
-    }, []);
-
-    const clearConversation = useCallback(() => {
-        setMessages([]);
-        if (sessionId) {
-            localStorage.removeItem(`chatMessages_${sessionId}`);
-        }
-    }, [sessionId]);
 
     const handleKeyDown = useCallback(
         (e) => {
@@ -206,10 +168,9 @@ const Hero = () => {
         [memoizedDataLists]
     );
 
-
     return (
         <section
-            className="w-full min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
+            className="w-full min-h-dvh sm:min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
             style={{ backgroundImage: "url(/hero-bg.png)" }}
         >
             <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
@@ -262,7 +223,7 @@ const Hero = () => {
                         <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
                             {messages.length > 0 && (
                                 <button
-                                    onClick={clearConversation}
+                                    onClick={() => setMessages([])}
                                     className="absolute top-2 right-2 text-xs bg-red-500/30 hover:bg-red-500/50 text-white px-2 py-1 rounded cursor-pointer"
                                 >
                                     Clear
@@ -309,10 +270,7 @@ const Hero = () => {
                                     <div className="flex justify-start">
                                         <div className="max-w-[80%] rounded-lg p-3 bg-purple-500/30 border border-purple-400">
                                             <div className="text-white flex items-center gap-2">
-                                                <HashLoader
-                                                    color="#7e59d9"
-                                                    size={20}
-                                                />
+                                                <HashLoader color="#7e59d9" size={20} />
                                                 <span>Thinking...</span>
                                             </div>
                                         </div>
