@@ -37,7 +37,22 @@ export const socialLinks = [
     },
 ];
 
-export const dataLists = ["Development", "Branding", "Design", "Management"]
+export const dataLists = [{
+    title: "Development",
+    prompt: "What tech stack are you using?"
+},
+{
+    title: "Branding",
+    prompt: "What’s your brand’s personality?"
+},
+{
+    title: "Design",
+    prompt: "Web or mobile UI first?"
+},
+{
+    title: "Management",
+    prompt: "Meetings: love or hate?"
+}]
 
 export const prompts = [
     "What services do you provide?",

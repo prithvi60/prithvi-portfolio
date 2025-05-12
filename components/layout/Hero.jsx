@@ -6,7 +6,7 @@ import React, {
     useCallback,
     useMemo,
 } from "react";
-import { FaCircleArrowUp } from "react-icons/fa6";
+import { FaCircleArrowUp, FaCircleStop } from "react-icons/fa6";
 import { dataLists, prompts } from "@/utils/Data";
 import { HashLoader } from "react-spinners";
 import { MdArrowCircleRight, MdError } from "react-icons/md";
@@ -22,8 +22,9 @@ const Hero = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [sessionId, setSessionId] = useState(null);
     const [isAtBottom, setIsAtBottom] = useState(true);
+    const [isStopped, setIsStopped] = useState(false);
+    const timeoutRef = useRef(null);
     const resultRef = useRef(null);
 
     // Memoize the static data to prevent unnecessary re-renders
@@ -34,7 +35,6 @@ const Hero = () => {
     const checkIfAtBottom = useCallback(() => {
         if (resultRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = resultRef.current;
-            // Consider "at bottom" if within 50px of the bottom
             const atBottom = scrollTop + clientHeight >= scrollHeight - 50;
             setIsAtBottom(atBottom);
         }
@@ -49,18 +49,19 @@ const Hero = () => {
         }
     }, [checkIfAtBottom]);
 
-    // Smooth auto-scroll to bottom when messages update, if at bottom
+    // Smooth auto-scroll to bottom when messages update or typewriter animation completes
     useEffect(() => {
-        if (isAtBottom && resultRef.current) {
+        if (isAtBottom && resultRef.current && !isLoading) {
             resultRef.current.scrollTo({
                 top: resultRef.current.scrollHeight,
                 behavior: "smooth",
             });
         }
-    }, [messages, isAtBottom]);
+    }, [messages, isStopped, isAtBottom, isLoading]);
 
     const handlePrompt = useCallback(
         (val) => {
+            setIsStopped(true);
             setInputMessage(val);
             handleSubmit(val);
             if (isMobile) {
@@ -77,6 +78,7 @@ const Hero = () => {
             if (!safePrompt || isLoading) return;
 
             setIsLoading(true);
+            setIsStopped(true);
             setError(null);
 
             // Add user message immediately
@@ -87,9 +89,6 @@ const Hero = () => {
             try {
                 // Prepare request with current session (if exists)
                 const requestBody = { prompt: safePrompt };
-                if (sessionId) {
-                    requestBody.sessionId = sessionId;
-                }
 
                 const response = await fetch("/api/chat", {
                     method: "POST",
@@ -105,33 +104,9 @@ const Hero = () => {
 
                 const data = await response.json();
 
-                // Handle new session creation
-                // if (data.sessionId && !sessionId) {
-                //     // Store sessionId with 1-day expiration
-                //     const sessionData = {
-                //         id: data.sessionId,
-                //         expires: new Date().getTime() + 24 * 60 * 60 * 1000, // 1 day
-                //     };
-                //     localStorage.setItem("sessionData", JSON.stringify(sessionData));
-                //     setSessionId(data.sessionId);
-                // }
-
                 // Add AI response
                 const aiMessage = { role: "assistant", content: data.result };
                 setMessages((prev) => [...prev, aiMessage]);
-
-                // Persist full conversation
-                // if (data.sessionId || sessionId) {
-                //     const currentSessionId = data.sessionId || sessionId;
-                //     const conversation = [...messages, userMessage, aiMessage];
-                //     localStorage.setItem(
-                //         `chat_${currentSessionId}`,
-                //         JSON.stringify({
-                //             messages: conversation,
-                //             lastUpdated: Date.now(),
-                //         })
-                //     );
-                // }
             } catch (err) {
                 console.error("API Error:", err);
                 setError(err.message);
@@ -139,7 +114,7 @@ const Hero = () => {
                 setIsLoading(false);
             }
         },
-        [inputMessage, isLoading, sessionId, messages]
+        [inputMessage, isLoading, messages]
     );
 
     const handleKeyDown = useCallback(
@@ -159,14 +134,19 @@ const Hero = () => {
 
     // Memoize the prompt buttons and data list items
     const memoizedPromptButtons = useMemo(
-        () => renderPromptButtons(memoizedPrompts, handlePrompt),
-        [memoizedPrompts, handlePrompt]
+        () => renderPromptButtons(memoizedPrompts, handlePrompt, isStopped),
+        [memoizedPrompts, handlePrompt, isStopped]
     );
 
     const memoizedDataListItems = useMemo(
-        () => renderDataListItems(memoizedDataLists),
-        [memoizedDataLists]
+        () => renderDataListItems(memoizedDataLists, handlePrompt),
+        [memoizedDataLists, handlePrompt]
     );
+
+    const stopTypewriter = () => {
+        setIsStopped(false);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    };
 
     return (
         <section
@@ -223,7 +203,10 @@ const Hero = () => {
                         <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
                             {messages.length > 0 && (
                                 <button
-                                    onClick={() => setMessages([])}
+                                    onClick={() => {
+                                        setMessages([]);
+                                        setIsStopped(false);
+                                    }}
                                     className="absolute top-2 right-2 text-xs bg-red-500/30 hover:bg-red-500/50 text-white px-2 py-1 rounded cursor-pointer"
                                 >
                                     Clear
@@ -254,8 +237,12 @@ const Hero = () => {
                                             >
                                                 {message.role === "assistant" ? (
                                                     <TypewriterText
+                                                        isLoading={isLoading}
                                                         text={message.content}
                                                         scrollContainerRef={resultRef}
+                                                        timeoutRef={timeoutRef}
+                                                        isStopped={isStopped}
+                                                        setIsStopped={setIsStopped}
                                                     />
                                                 ) : (
                                                     <p className="text-white whitespace-pre-wrap">
@@ -302,20 +289,32 @@ const Hero = () => {
                                 onKeyDown={handleKeyDown}
                                 required
                                 autoFocus
-                                disabled={isLoading}
+                                disabled={isLoading || isStopped}
                                 placeholder="Type your message..."
                                 className={`${isLoading ? "opacity-70" : ""
-                                    } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black font-normal no_scrollbar`}
+                                    } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black font-normal no_scrollbar disabled:cursor-not-allowed`}
                             />
-                            <button
-                                className={`${isLoading ? "opacity-50" : ""
-                                    } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
-                                onClick={() => handleSubmit()}
-                                aria-label="Submit prompt"
-                                disabled={isLoading}
-                            >
-                                <FaCircleArrowUp className="text-blue-500 text-3xl sm:text-4xl cursor-pointer" />
-                            </button>
+                            {isStopped ? (
+                                <button
+                                    className={`${isLoading ? "opacity-50" : ""
+                                        } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
+                                    onClick={() => stopTypewriter()}
+                                    aria-label="Submit prompt"
+                                    disabled={isLoading}
+                                >
+                                    <FaCircleStop className="text-blue-500 text-3xl sm:text-4xl cursor-pointer" />
+                                </button>
+                            ) : (
+                                <button
+                                    className={`${isLoading ? "opacity-50" : ""
+                                        } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
+                                    onClick={() => handleSubmit()}
+                                    aria-label="Submit prompt"
+                                    disabled={isLoading}
+                                >
+                                    <FaCircleArrowUp className="text-blue-500 text-3xl sm:text-4xl cursor-pointer" />
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>

@@ -1,17 +1,20 @@
 import { GiSupersonicArrow } from "react-icons/gi";
 
-export const renderPromptButtons = (prompts, handlePrompt) =>
+export const renderPromptButtons = (prompts, handlePrompt, isStopped) =>
     prompts.map((list, idx) => (
         <button
+            disabled={isStopped}
+            role="button"
+            aria-label={`${list} button`}
             key={idx}
-            className="p-5 rounded-xl border-2 border-white backdrop-blur-xl bg-white/10 text-sm font-medium text-start hover:scale-105 transition-all duration-300 cursor-pointer"
+            className="p-5 rounded-xl border-2 border-white backdrop-blur-xl bg-white/10 text-sm font-medium text-start hover:scale-105 transition-all duration-300 cursor-pointer disabled:cursor-not-allowed"
             onClick={() => handlePrompt(list)}
         >
             {list}
         </button>
     ));
 
-export const renderDataListItems = (dataLists) =>
+export const renderDataListItems = (dataLists, handlePrompt) =>
     dataLists.map((list, idx) => {
         const styles = {
             Development: {
@@ -48,12 +51,15 @@ export const renderDataListItems = (dataLists) =>
             },
         };
 
-        const style = styles[list] || styles.default;
+        const style = styles[list.title] || styles.default;
 
         return (
-            <div
-                className={`flex items-center gap-2 p-1.5 sm:p-3 rounded-xl w-full ${style.bg}`}
+            <button
+                role="button"
+                aria-label={`${list.title} button`}
+                className={`flex items-center gap-2 p-1.5 sm:p-3 rounded-xl w-full cursor-pointer ${style.bg}`}
                 key={idx}
+                onClick={() => handlePrompt(list.prompt)}
             >
                 <span className="shrink-0">
                     <GiSupersonicArrow
@@ -63,8 +69,8 @@ export const renderDataListItems = (dataLists) =>
                 <h2
                     className={`text-sm md:text-base tracking-wide font-semibold ${style.text}`}
                 >
-                    {list}
+                    {list.title}
                 </h2>
-            </div>
+            </button>
         );
     });
