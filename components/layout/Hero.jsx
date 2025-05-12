@@ -173,7 +173,7 @@ const Hero = () => {
             className="w-full min-h-dvh sm:min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
             style={{ backgroundImage: "url(/hero-bg.png)" }}
         >
-            <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-xs sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
                 <div
                     className="flex lg:hidden items-center gap-1 w-full justify-start px-2 pb-2 pt-5 cursor-pointer"
                     onClick={toggleMobileMenu}
