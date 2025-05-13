@@ -20,8 +20,8 @@ const ebGaramond = EB_Garamond({
 });
 
 export const metadata = {
-  title: "Personal Business Portfolio",
-  description: "Webibee, led by Prithvi, is a dynamic digital solutions company specializing in web development, branding, and business growth strategies. The company focuses on creating custom websites, enhancing online presence, and driving digital transformation for startups and enterprises. With a strong emphasis on innovation, client-centric solutions, and measurable results, Webibee combines technical expertise with creative vision to deliver scalable and impactful projects. Services include web design, digital marketing, and business consultancy, ensuring tailored support for every client’s unique needs.",
+  title: "Have you met Prithvi ?",
+  description: "Its my personal portfolio powered by AI",
   robots: "index, follow",
   applicationName: "Webibee Software Agency",
   authors: [{ name: "Prithvi" }],
@@ -52,14 +52,14 @@ export const metadata = {
   },
   openGraph: {
     type: "website",
-    url: `https://webibee.com`,
-    title: "Webibee Software Agency",
+    url: `https://prithvi.webibee.com`,
+    title: "Have you met Prithvi ?",
     description:
-      "Business Tech for Small Medium Enterprises across the globe",
-    siteName: "Webibee Agency",
+      "Its my personal portfolio powered by AI",
+    siteName: "Prithvi",
     images: [
       {
-        url: "https://ik.imagekit.io/webibee/Webibee/webibeepurplelogo.png?updatedAt=1735897013322",
+        url: "https://ik.imagekit.io/webibee/Webibee/Founder@webibee%20(2).png?updatedAt=1747146976053",
       },
     ],
   },

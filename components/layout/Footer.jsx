@@ -8,15 +8,15 @@ const Footer = () => {
     return (
         <footer className={`padding relative space-y-6 md:space-y-10 w-full`}>
             <div className="flex flex-col justify-center items-center gap-8 w-full text-primary-foreground">
-                <h1 className="text-sm text-center capitalize tracking-wider opacity-80 font-sourceCodePro">
+                {/* <h1 className="text-sm text-center capitalize tracking-wider opacity-80 font-sourceCodePro">
                     Code . Management . Design
-                </h1>
+                </h1> */}
                 <h2 className="text-[clamp(1.85rem,2.5vw,2.85rem)] leading-8 font-bold font-ebGaramond text-center">
-                    Let's Connect and Collaborate or Just talk
+                By the way, can I build your AI version ?
                 </h2>
                 <Modal title={"contact"} />
                 <p className="text-sm text-center capitalize opacity-80">
-                    © {new Date().getFullYear()} Lift Media, LLC
+                    © since 1999 Prithvi
                 </p>
             </div>
             <div

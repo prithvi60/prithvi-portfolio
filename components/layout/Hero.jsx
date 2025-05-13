@@ -189,10 +189,11 @@ const Hero = () => {
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
-                                    Hello there!
+                                Have you met me ? (well... my AI version)
                                 </h1>
                                 <p className="text-[clamp(0.75rem,1.25vw,1.25rem)] leading-4 sm:leading-6 font-normal">
-                                    All about the work, the story, and the people behind it.
+                                I can help solve your deepest problems. In Business for now :)
+ Ask AI me anything. It knows what I do, what I’ve built, and what might help you too.
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full max-w-xl mx-auto">
                                     {memoizedDataListItems}

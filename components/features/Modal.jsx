@@ -19,7 +19,7 @@ export const Modal = ({ title }) => {
                 }}
                 className="rounded-lg border-2 border-solid border-black/70 px-4 py-3 font-normal capitalize text-black text-lg xl:text-xl transition-all duration-300 hover:scale-110 cursor-pointer font-sourceCodePro"
             >
-                GET IN TOUCH
+                Okay! lets chat 
             </button>
             <SpringModal
                 isOpen={isOpen}
@@ -136,7 +136,7 @@ export const SpringModal = ({ isOpen, setIsOpen, title, thank, setThank }) => {
                             <div className="relative z-10">
                                 <div className="w-full">
                                     <h3 className="font-extrabold text-[clamp(1.02rem,1.75vw,1.5rem)] leading-6 md:leading-10 text-center text-black">
-                                        Enquire Now
+                                        Will contact you ASAP
                                     </h3>
                                 </div>
                                 <div className="relative w-full max-w-md mx-auto">
@@ -199,14 +199,14 @@ export const SpringModal = ({ isOpen, setIsOpen, title, thank, setThank }) => {
                                             disabled={status}
                                             className="rounded-lg w-full border-2 border-solid border-white flex justify-center items-center gap-3 bg-primary px-2 py-2 md:py-3 md:px-4 font-semibold capitalize text-background text-sm md:text-base transition-all duration-300 hover:scale-105 hover:bg-primary/60 cursor-pointer"
                                         >
-                                            {status ? <Loader /> : "Submit"}
+                                            {status ? <Loader /> : "Shoot"}
                                         </button>
                                     </form>
                                 </div>
-                                <p className="font-semibold text-[clamp(0.8rem,1.25vw,1rem)] leading-4 md:leading-5 text-center text-foreground">
+                                {/* <p className="font-semibold text-[clamp(0.8rem,1.25vw,1rem)] leading-4 md:leading-5 text-center text-foreground">
                                     Have questions? Send us your details, and we'll be in touch
                                     soon!
-                                </p>
+                                </p> */}
                             </div>
                         )}
                     </motion.div>
