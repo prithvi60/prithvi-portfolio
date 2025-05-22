@@ -5,12 +5,13 @@ import React, {
     useState,
     useCallback,
     useMemo,
+    useLayoutEffect,
 } from "react";
 import { FaCircleArrowUp, FaCircleStop } from "react-icons/fa6";
 import { HashLoader } from "react-spinners";
 import { MdError } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
-import { TypewriterText } from "../features/TypewriterText";
+import Typewriter from 'typewriter-effect';
 
 const HeroNew = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -22,35 +23,8 @@ const HeroNew = () => {
     const [isAtBottom, setIsAtBottom] = useState(true);
     const [isStopped, setIsStopped] = useState(false);
     const timeoutRef = useRef(null);
-    const resultRef = useRef(null);
-
-    // Check if user is at the bottom of the chat container
-    const checkIfAtBottom = useCallback(() => {
-        if (resultRef.current) {
-            const { scrollTop, scrollHeight, clientHeight } = resultRef.current;
-            const atBottom = scrollTop + clientHeight >= scrollHeight - 50;
-            setIsAtBottom(atBottom);
-        }
-    }, []);
-
-    // Add scroll event listener to track user scrolling
-    useEffect(() => {
-        const container = resultRef.current;
-        if (container) {
-            container.addEventListener("scroll", checkIfAtBottom);
-            return () => container.removeEventListener("scroll", checkIfAtBottom);
-        }
-    }, [checkIfAtBottom]);
-
-    // Smooth auto-scroll to bottom when messages update or typewriter animation completes
-    useEffect(() => {
-        if (isAtBottom && resultRef.current && !isLoading) {
-            resultRef.current.scrollTo({
-                top: resultRef.current.scrollHeight,
-                behavior: "smooth",
-            });
-        }
-    }, [messages, isStopped, isAtBottom, isLoading]);
+    const containerRef = useRef(null);
+    const messagesEndRef = useRef(null);
 
     const handlePrompt = useCallback(
         (val) => {
@@ -64,6 +38,16 @@ const HeroNew = () => {
         },
         [isMobile]
     );
+
+    const scrollToBottom = () => {
+        if (containerRef.current) {
+            containerRef.current.scrollTop = containerRef.current.scrollHeight;
+        }
+    };
+
+    useLayoutEffect(() => {
+        scrollToBottom();
+    }, [messages]);
 
     const handleSubmit = useCallback(
         async (promptValue = inputMessage) => {
@@ -132,38 +116,8 @@ const HeroNew = () => {
             style={{ backgroundImage: "url(/hero-bg.png)" }}
         >
             <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
-                {/* <div
-                    className="flex lg:hidden items-center gap-1 w-full justify-start px-2 pb-2 pt-5 cursor-pointer"
-                    onClick={toggleMobileMenu}
-                >
-                    <MdArrowCircleRight className="text-2xl text-yellow-400 animate-pulse" />
-                    <p className="text-sm md:text-base tracking-wide font-medium">{`Prompts (${memoizedPrompts.length})`}</p>
-                </div> */}
-
-                {/* <motion.div
-                    className="left-0 z-20 absolute top-0 w-full h-screen bg-primary text-white"
-                    initial={{ x: "-100%" }}
-                    animate={{ x: isOpen ? "0%" : "-100%" }}
-                    transition={{ ease: "easeInOut" }}
-                >
-                    <div className="flex justify-between items-center border-b-2 border-white p-5">
-                        <p className="text-base font-medium capitalize">{`Prompts (${memoizedPrompts.length})`}</p>
-                        <span
-                            className="bg-white rounded-full"
-                            onClick={() => setIsOpen(false)}
-                        >
-                            <IoMdCloseCircle className="text-xl text-red-700" />
-                        </span>
-                    </div>
-                    <div className="w-full max-h-[80vh] thumbnail overflow-y-scroll border-white px-5 pt-7 pb-12">
-                        <div className="grid grid-cols-1 space-y-4">
-                            {memoizedPromptButtons}
-                        </div>
-                    </div>
-                </motion.div> */}
-
                 <div className="w-full h-full lg:py-2 sm:mx-5">
-                    <div className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto no_scrollbar space-y-5 md:space-y-10">
+                    <div className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto no_scrollbar space-y-5 md:space-y-10" ref={containerRef}>
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
@@ -179,48 +133,56 @@ const HeroNew = () => {
                                 </div> */}
                             </div>
                         </div>
-                        {/* {messages.length !== 0 && !isLoading && ( */}
                         <div className="h-full relative w-full">
-                            <div ref={resultRef} className="p-5 space-y-4 max-w-3xl mx-auto">
+                            <div className="p-5 space-y-4 max-w-3xl mx-auto">
                                 <AnimatePresence>
-                                    {messages.map((message, index) => (
-                                        <motion.div
-                                            key={index}
-                                            className={`flex ${message.role === "user"
-                                                ? "justify-end"
-                                                : "justify-start"
-                                                }`}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            exit={{ opacity: 0, y: -10 }}
-                                            transition={{ duration: 0.3 }}
-                                        >
-                                            <div
-                                                className={`max-w-[80%] rounded-lg p-3 ${message.role === "user"
-                                                    ? "bg-blue-500/30 border border-blue-400"
-                                                    : "bg-purple-500/30 border border-purple-400"
+                                    {messages.map((message, index) => {
+                                        const isLatestAssistant = message.role === "assistant" && index === messages.length - 1;
+                                        return (
+                                            <motion.div
+                                                key={index}
+                                                className={`flex ${message.role === "user"
+                                                    ? "justify-end"
+                                                    : "justify-start"
                                                     }`}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                transition={{ duration: 0.3 }}
                                             >
-                                                {message.role === "assistant" ? (
-                                                    // <TypewriterText
-                                                    //     isLoading={isLoading}
-                                                    //     text={message.content}
-                                                    //     scrollContainerRef={resultRef}
-                                                    //     timeoutRef={timeoutRef}
-                                                    //     isStopped={isStopped}
-                                                    //     setIsStopped={setIsStopped}
-                                                    // />
-                                                    <p className="text-white whitespace-pre-wrap">
-                                                        {message.content}
-                                                    </p>
-                                                ) : (
-                                                    <p className="text-white whitespace-pre-wrap">
-                                                        {message.content}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        </motion.div>
-                                    ))}
+                                                <div
+                                                    className={`max-w-[80%] rounded-lg p-3 ${message.role === "user"
+                                                        ? "bg-blue-500/30 border border-blue-400"
+                                                        : "bg-purple-500/30 border border-purple-400"
+                                                        }`}
+                                                >
+                                                    {message.role === "assistant" ? (
+                                                        <div className="text-white whitespace-pre-wrap">
+                                                            {isLatestAssistant ? (
+                                                                <Typewriter
+                                                                    options={{
+                                                                        delay: 20,
+                                                                        cursor: "",
+                                                                    }}
+                                                                    onInit={(typewriter) => {
+                                                                        typewriter
+                                                                            .typeString(message.content)
+                                                                            .start();
+                                                                    }}
+                                                                />
+                                                            ) : (
+                                                                <p>{message.content}</p>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <p className="text-white whitespace-pre-wrap">
+                                                            {message.content}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </motion.div>
+                                        )
+                                    })}
                                 </AnimatePresence>
                                 {isLoading && (
                                     <div className="flex justify-start">
@@ -242,10 +204,10 @@ const HeroNew = () => {
                                         </div>
                                     </div>
                                 )}
+                                <div ref={messagesEndRef} />
                             </div>
                         </div>
-                        {/* )} */}
-                        <div className="fixed left-1/2 -translate-x-1/2 bottom-5 w-full max-w-6xl bg-[#E8E8E8] px-4 py-3 border-t shadow-md rounded-xl">
+                        <div className="fixed left-1/2 -translate-x-1/2 bottom-5 w-full max-w-xs sm:max-w-xl lg:max-w-3xl xl:max-w-5xl bg-[#E8E8E8] px-4 py-3 border-t shadow-md rounded-xl">
                             <div className="flex items-center space-x-2">
                                 <textarea
                                     type="text"
@@ -287,17 +249,6 @@ const HeroNew = () => {
                         </div>
                     </div>
                 </div>
-
-                {/* <div className="w-full h-full hidden lg:block lg:w-2/5 xl:w-[30%] overflow-hidden">
-                    <p className="text-base font-medium capitalize p-5 border-s border-white">
-                        {`Prompts (${memoizedPrompts.length})`}
-                    </p>
-                    <div className="w-full max-h-[80vh] thumbnail overflow-y-scroll border-s border-white border-y px-5 pt-7 pb-12">
-                        <div className="grid grid-cols-1 space-y-4">
-                            {memoizedPromptButtons}
-                        </div>
-                    </div>
-                </div> */}
             </div>
         </section>
     );

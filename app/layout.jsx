@@ -1,5 +1,6 @@
 import { EB_Garamond, Inter, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
+import Footer from "@/components/layout/Footer";
 
 
 const inter = Inter({
@@ -68,10 +69,18 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      <head>
+        {/* Add Calendly widget stylesheet globally */}
+        <link
+          href="https://assets.calendly.com/assets/external/widget.css"
+          rel="stylesheet"
+        />
+      </head>
       <body
         className={`${inter.className} ${sourceCodePro.variable} ${ebGaramond.variable} antialiased`}
       >
         {children}
+        <Footer />
       </body>
     </html>
   );
