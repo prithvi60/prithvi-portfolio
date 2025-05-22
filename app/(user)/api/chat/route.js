@@ -1,93 +1,72 @@
 import { NextResponse } from "next/server";
-import { parse, serialize } from "cookie";
-import { v4 as uuidv4 } from "uuid";
-
-// Session storage (in-memory for this example)
-const sessions = new Map();
 
 export async function POST(request) {
   try {
+    // Parse the request body
     const { prompt } = await request.json();
-    const cookies = parse(request.headers.get("cookie") || "");
 
-    if (!prompt) {
+    // Validate input
+    if (!prompt || typeof prompt !== "string" || !prompt.trim()) {
       return NextResponse.json(
-        { error: "Prompt is required" },
+        { error: "Please provide a valid non-empty prompt" },
         { status: 400 }
       );
     }
 
-    // Get or create session ID
-    let sessionId = cookies.sessionId;
-    if (!sessionId || !sessions.has(sessionId)) {
-      sessionId = uuidv4();
-      sessions.set(sessionId, []);
-    }
+    // Call the portfolio API with the correct endpoint
+    const apiResponse = await fetch(
+      "https://www.api.portfolio.webibee.com/run",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          // Uncomment and add authentication if required:
+          // "Authorization": `Bearer ${process.env.PORTFOLIO_API_KEY}`
+        },
+        body: JSON.stringify({
+          prompt: prompt.trim(),
+        }),
+      }
+    );
 
-    // Get previous messages from session
-    const previousMessages = sessions.get(sessionId) || [];
+    // Handle API errors
+    if (!apiResponse.ok) {
+      const errorText = await apiResponse.text();
+      console.error("API Error:", {
+        status: apiResponse.status,
+        statusText: apiResponse.statusText,
+        response: errorText,
+      });
 
-    // Create new messages array with previous context
-    const messages = [...previousMessages, { role: "user", content: prompt }];
-
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo-0125",
-        messages,
-        temperature: 0.7,
-        max_tokens: 1000,
-      }),
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(
-        errorData.error?.message || "Failed to fetch from OpenAI API"
+      return NextResponse.json(
+        {
+          error: "Failed to fetch response from AI service",
+          details:
+            process.env.NODE_ENV === "development" ? errorText : undefined,
+        },
+        { status: apiResponse.status || 502 }
       );
     }
 
-    const data = await response.json();
-    const aiResponse =
-      data.choices[0]?.message?.content || "No response from AI";
+    const { response, step } = await apiResponse.json();
 
-    // Update conversation history
-    const updatedMessages = [
-      ...messages,
-      { role: "assistant", content: aiResponse },
-    ];
+    // Validate API response
+    if (!response || typeof response !== "string") {
+      console.error("Invalid API response:", { response, step });
+      return NextResponse.json(
+        { error: "Received invalid response from AI service" },
+        { status: 502 }
+      );
+    }
 
-    // Store updated messages in session
-    sessions.set(sessionId, updatedMessages);
-
-    // Create response with Set-Cookie header
-    const responseHeaders = {
-      "Set-Cookie": serialize("sessionId", sessionId, {
-        path: "/",
-        httpOnly: true,
-        sameSite: "strict",
-        maxAge: 60 * 60 * 24, // 1 day
-      }),
-    };
-
-    return NextResponse.json(
-      {
-        result: aiResponse,
-        conversationHistory: updatedMessages,
-        sessionId,
-      },
-      {
-        headers: responseHeaders,
-      }
-    );
+    return NextResponse.json({ response, step });
   } catch (error) {
-    console.error("OpenAI API error:", error);
+    console.error("Server Error:", error.message);
     return NextResponse.json(
-      { error: error.message || "Error processing your request" },
+      {
+        error: "Internal server error",
+        suggestion: "Please try again later",
+      },
       { status: 500 }
     );
   }

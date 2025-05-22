@@ -7,15 +7,12 @@ import React, {
     useMemo,
 } from "react";
 import { FaCircleArrowUp, FaCircleStop } from "react-icons/fa6";
-import { dataLists, prompts } from "@/utils/Data";
 import { HashLoader } from "react-spinners";
-import { MdArrowCircleRight, MdError } from "react-icons/md";
+import { MdError } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
-import { IoMdCloseCircle } from "react-icons/io";
 import { TypewriterText } from "../features/TypewriterText";
-import { renderDataListItems, renderPromptButtons } from "./OtherRenders";
 
-const Hero = () => {
+const HeroNew = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [isMobile, setIsMobile] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
@@ -26,10 +23,6 @@ const Hero = () => {
     const [isStopped, setIsStopped] = useState(false);
     const timeoutRef = useRef(null);
     const resultRef = useRef(null);
-
-    // Memoize the static data to prevent unnecessary re-renders
-    const memoizedDataLists = useMemo(() => dataLists, []);
-    const memoizedPrompts = useMemo(() => prompts, []);
 
     // Check if user is at the bottom of the chat container
     const checkIfAtBottom = useCallback(() => {
@@ -78,7 +71,7 @@ const Hero = () => {
             if (!safePrompt || isLoading) return;
 
             setIsLoading(true);
-            setIsStopped(true);
+            // setIsStopped(true);
             setError(null);
 
             // Add user message immediately
@@ -87,34 +80,35 @@ const Hero = () => {
             setInputMessage("");
 
             try {
-                // Prepare request with current session (if exists)
-                const requestBody = { prompt: safePrompt };
-
                 const response = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(requestBody),
-                    credentials: "include",
+                    body: JSON.stringify({ prompt: safePrompt }),
                 });
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || "Request failed");
+                    throw new Error(errorData.error || `Request failed with status ${response.status}`);
                 }
 
                 const data = await response.json();
 
+                // Validate response data
+                if (!data.response || typeof data.response !== "string") {
+                    throw new Error("Invalid response from server");
+                }
+
                 // Add AI response
-                const aiMessage = { role: "assistant", content: data.result };
+                const aiMessage = { role: "assistant", content: data.response };
                 setMessages((prev) => [...prev, aiMessage]);
             } catch (err) {
-                console.error("API Error:", err);
-                setError(err.message);
+                console.error("API Error:", err.message);
+                setError(err.message || "Failed to fetch response from AI service");
             } finally {
                 setIsLoading(false);
             }
         },
-        [inputMessage, isLoading, messages]
+        [inputMessage, isLoading]
     );
 
     const handleKeyDown = useCallback(
@@ -125,22 +119,6 @@ const Hero = () => {
             }
         },
         [handleSubmit]
-    );
-
-    const toggleMobileMenu = useCallback(() => {
-        setIsOpen((prev) => !prev);
-        setIsMobile(true);
-    }, []);
-
-    // Memoize the prompt buttons and data list items
-    const memoizedPromptButtons = useMemo(
-        () => renderPromptButtons(memoizedPrompts, handlePrompt, isStopped),
-        [memoizedPrompts, handlePrompt, isStopped]
-    );
-
-    const memoizedDataListItems = useMemo(
-        () => renderDataListItems(memoizedDataLists, handlePrompt),
-        [memoizedDataLists, handlePrompt]
     );
 
     const stopTypewriter = () => {
@@ -154,15 +132,15 @@ const Hero = () => {
             style={{ backgroundImage: "url(/hero-bg.png)" }}
         >
             <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
-                <div
+                {/* <div
                     className="flex lg:hidden items-center gap-1 w-full justify-start px-2 pb-2 pt-5 cursor-pointer"
                     onClick={toggleMobileMenu}
                 >
                     <MdArrowCircleRight className="text-2xl text-yellow-400 animate-pulse" />
                     <p className="text-sm md:text-base tracking-wide font-medium">{`Prompts (${memoizedPrompts.length})`}</p>
-                </div>
+                </div> */}
 
-                <motion.div
+                {/* <motion.div
                     className="left-0 z-20 absolute top-0 w-full h-screen bg-primary text-white"
                     initial={{ x: "-100%" }}
                     animate={{ x: isOpen ? "0%" : "-100%" }}
@@ -182,10 +160,10 @@ const Hero = () => {
                             {memoizedPromptButtons}
                         </div>
                     </div>
-                </motion.div>
+                </motion.div> */}
 
-                <div className="w-full h-full lg:w-3/5 xl:w-[70%] space-y-5 md:space-y-10 lg:py-6 sm:mx-5">
-                    {messages.length === 0 && !isLoading ? (
+                <div className="w-full h-full lg:py-2 sm:mx-5">
+                    <div className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto no_scrollbar space-y-5 md:space-y-10">
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
@@ -193,30 +171,17 @@ const Hero = () => {
                                 </h1>
                                 <p className="text-[clamp(0.75rem,1.25vw,1.25rem)] leading-4 sm:leading-6 font-normal">
                                     I can help solve your deepest problems. In Business for now :)
-                                    Ask AI me anything. It knows what I do, what I’ve built, and what might help you too.
+                                    Ask AI me anything. It knows what I do, what I’ve built, and
+                                    what might help you too.
                                 </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full max-w-xl mx-auto">
+                                {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 w-full max-w-xl mx-auto">
                                     {memoizedDataListItems}
-                                </div>
+                                </div> */}
                             </div>
                         </div>
-                    ) : (
-                        <div className="h-fit max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-2xl mx-auto backdrop-blur-xl bg-black/20 rounded-xl overflow-hidden shadow-lg shadow-black/50 border border-white relative w-full">
-                            {messages.length > 0 && (
-                                <button
-                                    onClick={() => {
-                                        setMessages([]);
-                                        setIsStopped(false);
-                                    }}
-                                    className="absolute top-2 right-2 text-xs bg-red-500/30 hover:bg-red-500/50 text-white px-2 py-1 rounded cursor-pointer"
-                                >
-                                    Clear
-                                </button>
-                            )}
-                            <div
-                                ref={resultRef}
-                                className="p-5 max-h-[60vh] md:max-h-[60vh] overflow-y-auto no_scrollbar space-y-4"
-                            >
+                        {/* {messages.length !== 0 && !isLoading && ( */}
+                        <div className="h-full relative w-full">
+                            <div ref={resultRef} className="p-5 space-y-4 max-w-3xl mx-auto">
                                 <AnimatePresence>
                                     {messages.map((message, index) => (
                                         <motion.div
@@ -237,14 +202,17 @@ const Hero = () => {
                                                     }`}
                                             >
                                                 {message.role === "assistant" ? (
-                                                    <TypewriterText
-                                                        isLoading={isLoading}
-                                                        text={message.content}
-                                                        scrollContainerRef={resultRef}
-                                                        timeoutRef={timeoutRef}
-                                                        isStopped={isStopped}
-                                                        setIsStopped={setIsStopped}
-                                                    />
+                                                    // <TypewriterText
+                                                    //     isLoading={isLoading}
+                                                    //     text={message.content}
+                                                    //     scrollContainerRef={resultRef}
+                                                    //     timeoutRef={timeoutRef}
+                                                    //     isStopped={isStopped}
+                                                    //     setIsStopped={setIsStopped}
+                                                    // />
+                                                    <p className="text-white whitespace-pre-wrap">
+                                                        {message.content}
+                                                    </p>
                                                 ) : (
                                                     <p className="text-white whitespace-pre-wrap">
                                                         {message.content}
@@ -276,51 +244,51 @@ const Hero = () => {
                                 )}
                             </div>
                         </div>
-                    )}
-
-                    <div className="fixed left-4 sm:left-10 bottom-5 w-full max-w-72 sm:max-w-lg md:max-w-xl lg:max-w-lg xl:max-w-3xl mx-auto bg-[#E8E8E8] px-4 py-3 border-t shadow-md rounded-xl">
-                        <div className="flex items-center space-x-2">
-                            <textarea
-                                type="text"
-                                id="prompt-input"
-                                name="prompt"
-                                rows={1}
-                                value={inputMessage}
-                                onChange={(e) => setInputMessage(e.target.value)}
-                                onKeyDown={handleKeyDown}
-                                required
-                                autoFocus
-                                disabled={isLoading || isStopped}
-                                placeholder="Ask Anything"
-                                className={`${isLoading ? "opacity-70" : ""
-                                    } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black font-normal no_scrollbar disabled:cursor-not-allowed`}
-                            />
-                            {isStopped ? (
-                                <button
-                                    className={`${isLoading ? "opacity-50" : ""
-                                        } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
-                                    onClick={() => stopTypewriter()}
-                                    aria-label="Submit prompt"
-                                    disabled={isLoading}
-                                >
-                                    <FaCircleStop className="text-blue-500 text-3xl sm:text-4xl cursor-pointer" />
-                                </button>
-                            ) : (
-                                <button
-                                    className={`${isLoading ? "opacity-50" : ""
-                                        } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
-                                    onClick={() => handleSubmit()}
-                                    aria-label="Submit prompt"
-                                    disabled={isLoading}
-                                >
-                                    <FaCircleArrowUp className="text-blue-500 text-3xl sm:text-4xl cursor-pointer" />
-                                </button>
-                            )}
+                        {/* )} */}
+                        <div className="fixed left-1/2 -translate-x-1/2 bottom-5 w-full max-w-6xl bg-[#E8E8E8] px-4 py-3 border-t shadow-md rounded-xl">
+                            <div className="flex items-center space-x-2">
+                                <textarea
+                                    type="text"
+                                    id="prompt-input"
+                                    name="prompt"
+                                    rows={1}
+                                    value={inputMessage}
+                                    onChange={(e) => setInputMessage(e.target.value)}
+                                    onKeyDown={handleKeyDown}
+                                    required
+                                    autoFocus
+                                    disabled={isLoading || isStopped}
+                                    placeholder="Type your message..."
+                                    className={`${isLoading ? "opacity-70" : ""
+                                        } resize-none text-base xl:text-lg py-2 xl:py-4 ps-2 sm:ps-5 pe-8 sm:pe-12 md:pe-20 focus-within:border-none focus-within:outline-none w-full placeholder:text-black/50 text-black font-normal no_scrollbar disabled:cursor-not-allowed`}
+                                />
+                                {isStopped ? (
+                                    <button
+                                        className={`${isLoading ? "opacity-50" : ""
+                                            } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
+                                        onClick={() => stopTypewriter()}
+                                        aria-label="Submit prompt"
+                                        disabled={isLoading}
+                                    >
+                                        <FaCircleStop className="text-primary text-3xl sm:text-4xl cursor-pointer" />
+                                    </button>
+                                ) : (
+                                    <button
+                                        className={`${isLoading ? "opacity-50" : ""
+                                            } absolute top-1/2 -translate-y-1/2 right-2 sm:right-5`}
+                                        onClick={() => handleSubmit()}
+                                        aria-label="Submit prompt"
+                                        disabled={isLoading}
+                                    >
+                                        <FaCircleArrowUp className="text-primary text-3xl sm:text-4xl cursor-pointer" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="w-full h-full hidden lg:block lg:w-2/5 xl:w-[30%] overflow-hidden">
+                {/* <div className="w-full h-full hidden lg:block lg:w-2/5 xl:w-[30%] overflow-hidden">
                     <p className="text-base font-medium capitalize p-5 border-s border-white">
                         {`Prompts (${memoizedPrompts.length})`}
                     </p>
@@ -329,10 +297,10 @@ const Hero = () => {
                             {memoizedPromptButtons}
                         </div>
                     </div>
-                </div>
+                </div> */}
             </div>
         </section>
     );
 };
 
-export default Hero;
+export default HeroNew;
