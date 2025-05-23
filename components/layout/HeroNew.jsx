@@ -119,22 +119,22 @@ const HeroNew = () => {
         setIsStopped(false);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-    console.log(stepCount);
+    // console.log(stepCount);
 
     return (
         <section
-            className="w-full min-h-dvh sm:min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
+            className="w-full h-dvh md:min-h-screen flex flex-col items-center justify-center bg-cover bg-center bg-no-repeat relative"
             style={{ backgroundImage: "url(/hero-bg.png)" }}
         >
-            <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
+            <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl 2xl:w-screen h-[70dvh] sm:h-[85dvh] lg:mx-auto xl:mx-0 text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
                 <div className="w-full h-full lg:py-2 sm:mx-5">
                     <div
-                        className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto no_scrollbar space-y-5 md:space-y-10"
+                        className="max-h-[70dvh] md:max-h-[70dvh] overflow-y-auto space-y-5 md:space-y-10"
                         ref={containerRef}
                     >
-                        <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
+                        <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
-                                <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
+                                <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-8 2xl:leading-14 tracking-wider font-bold capitalize">
                                     Have you met me ? (well... my AI version)
                                 </h1>
                                 <p className="text-[clamp(0.75rem,1.25vw,1.25rem)] leading-4 sm:leading-6 font-normal">

@@ -186,7 +186,7 @@ const Hero = () => {
 
                 <div className="w-full h-full lg:w-3/5 xl:w-[70%] space-y-5 md:space-y-10 lg:py-6 sm:mx-5">
                     {messages.length === 0 && !isLoading ? (
-                        <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
+                        <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 ">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
                                     Have you met me ? (well... my AI version)
