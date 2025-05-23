@@ -129,7 +129,7 @@ const HeroNew = () => {
             <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl 2xl:w-screen h-[70dvh] sm:h-[85dvh] lg:mx-auto xl:mx-0 text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
                 <div className="w-full h-full lg:py-2 sm:mx-5">
                     <div
-                        className="max-h-[70dvh] md:max-h-[70dvh] overflow-y-auto space-y-5 md:space-y-10"
+                        className="max-h-[62dvh] md:max-h-[70dvh] overflow-y-auto space-y-5 md:space-y-10"
                         ref={containerRef}
                     >
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5">
@@ -233,8 +233,8 @@ const HeroNew = () => {
                                         </div>
                                     </div>
                                 )}
-                                <div ref={messagesEndRef} />
                             </div>
+                            <div ref={messagesEndRef} />
                         </div>
                         <div className="fixed left-1/2 -translate-x-1/2 bottom-5 w-full max-w-xs sm:max-w-xl lg:max-w-3xl xl:max-w-5xl bg-[#E8E8E8] px-4 py-3 border-t shadow-md rounded-xl">
                             <div className="flex items-center space-x-2">
