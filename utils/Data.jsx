@@ -29,19 +29,19 @@ export const socialLinks = [
     ),
     href: "https://webibee.com/",
   },
-  {
-    icon: (
-      <FiPhoneCall className="text-3xl md:text-4xl text-primary hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5" />
-    ),
-    href: "tel:+91-7358023088",
-  },
+  // {
+  //   icon: (
+  //     <FiPhoneCall className="text-3xl md:text-4xl text-primary hover:text-black/70 hover:animate-pulse bg-transparent border border-secondary rounded-full p-1.5" />
+  //   ),
+  //   href: "tel:+91-7358023088",
+  // },
 ];
 
 export const dataLists = [
-//   {
-//     title: "Try this:",
-//     prompt: "What’s your brand’s personality?",
-//   },
+  //   {
+  //     title: "Try this:",
+  //     prompt: "What’s your brand’s personality?",
+  //   },
   {
     title: "What’s the one business problem keeping you up at night?",
     prompt: "Simulate a small business user. What’s the one business problem keeping you up at night?",

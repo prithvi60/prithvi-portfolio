@@ -11,7 +11,8 @@ import { FaCircleArrowUp, FaCircleStop } from "react-icons/fa6";
 import { HashLoader } from "react-spinners";
 import { MdError } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
-import Typewriter from 'typewriter-effect';
+import Typewriter from "typewriter-effect";
+import Image from "next/image";
 
 const HeroNew = () => {
     const [isOpen, setIsOpen] = useState(false);
@@ -20,8 +21,9 @@ const HeroNew = () => {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [messages, setMessages] = useState([]);
-    const [isAtBottom, setIsAtBottom] = useState(true);
+    const [stepCount, setStepCount] = useState(0);
     const [isStopped, setIsStopped] = useState(false);
+    const [animationComplete, setAnimationComplete] = useState(false);
     const timeoutRef = useRef(null);
     const containerRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -72,7 +74,9 @@ const HeroNew = () => {
 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));
-                    throw new Error(errorData.error || `Request failed with status ${response.status}`);
+                    throw new Error(
+                        errorData.error || `Request failed with status ${response.status}`
+                    );
                 }
 
                 const data = await response.json();
@@ -83,7 +87,13 @@ const HeroNew = () => {
                 }
 
                 // Add AI response
-                const aiMessage = { role: "assistant", content: data.response };
+                const aiMessage = {
+                    role: "assistant",
+                    content: data.response,
+                    step: data.step,
+                    ...(data.step >= 4 && { img: "/prithvi-QR.jpg" }),
+                };
+                setStepCount(data.step);
                 setMessages((prev) => [...prev, aiMessage]);
             } catch (err) {
                 console.error("API Error:", err.message);
@@ -109,6 +119,7 @@ const HeroNew = () => {
         setIsStopped(false);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
+    console.log(stepCount);
 
     return (
         <section
@@ -117,7 +128,10 @@ const HeroNew = () => {
         >
             <div className="flex flex-col lg:flex-row justify-center items-center w-full max-w-[88dvw] sm:max-w-xl md:max-w-2xl lg:max-w-4xl xl:min-w-7xl h-[85vh] lg:mx-auto text-white font-bold backdrop-blur-md bg-white/10 rounded-xl shadow-lg shadow-black/50 xl:gap-12 border border-white relative overflow-hidden">
                 <div className="w-full h-full lg:py-2 sm:mx-5">
-                    <div className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto no_scrollbar space-y-5 md:space-y-10" ref={containerRef}>
+                    <div
+                        className="max-h-[70vh] md:max-h-[70vh] overflow-y-auto no_scrollbar space-y-5 md:space-y-10"
+                        ref={containerRef}
+                    >
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5 speciality">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1.5rem,2vw,3.25rem)] leading-6 tracking-wider font-bold capitalize">
@@ -137,7 +151,9 @@ const HeroNew = () => {
                             <div className="p-5 space-y-4 max-w-3xl mx-auto">
                                 <AnimatePresence>
                                     {messages.map((message, index) => {
-                                        const isLatestAssistant = message.role === "assistant" && index === messages.length - 1;
+                                        const isLatestAssistant =
+                                            message.role === "assistant" &&
+                                            index === messages.length - 1;
                                         return (
                                             <motion.div
                                                 key={index}
@@ -153,23 +169,37 @@ const HeroNew = () => {
                                                 <div
                                                     className={`max-w-[80%] rounded-lg p-3 ${message.role === "user"
                                                         ? "bg-blue-500/30 border border-blue-400"
-                                                        : "bg-purple-500/30 border border-purple-400"
+                                                        : "bg-yellow-500/60 border border-yellow-300"
                                                         }`}
                                                 >
                                                     {message.role === "assistant" ? (
                                                         <div className="text-white whitespace-pre-wrap">
                                                             {isLatestAssistant ? (
-                                                                <Typewriter
-                                                                    options={{
-                                                                        delay: 20,
-                                                                        cursor: "",
-                                                                    }}
-                                                                    onInit={(typewriter) => {
-                                                                        typewriter
-                                                                            .typeString(message.content)
-                                                                            .start();
-                                                                    }}
-                                                                />
+                                                                <div className="block space-y-3">
+                                                                    <Typewriter
+                                                                        options={{
+                                                                            delay: 20,
+                                                                            cursor: "",
+                                                                        }}
+                                                                        onInit={(typewriter) => {
+                                                                            typewriter
+                                                                                .typeString(message.content)
+                                                                                .callFunction(() => {
+                                                                                    setAnimationComplete(true);
+                                                                                })
+                                                                                .start();
+                                                                        }}
+                                                                    />
+                                                                    {message.img && animationComplete === true && (
+                                                                        <Image
+                                                                            alt="UPI QR Code"
+                                                                            src={message.img}
+                                                                            width={200}
+                                                                            height={200}
+                                                                            className="object-contain object-center w-auto h-auto rounded-lg"
+                                                                        />
+                                                                    )}
+                                                                </div>
                                                             ) : (
                                                                 <p>{message.content}</p>
                                                             )}
@@ -181,25 +211,24 @@ const HeroNew = () => {
                                                     )}
                                                 </div>
                                             </motion.div>
-                                        )
+                                        );
                                     })}
                                 </AnimatePresence>
                                 {isLoading && (
                                     <div className="flex justify-start">
-                                        <div className="max-w-[80%] rounded-lg p-3 bg-purple-500/30 border border-purple-400">
+                                        <div className="max-w-[80%] rounded-lg p-3 bg-yellow-500/60 border border-yellow-300">
                                             <div className="text-white flex items-center gap-2">
                                                 <HashLoader color="#7e59d9" size={20} />
-                                                <span>Thinking...</span>
                                             </div>
                                         </div>
                                     </div>
                                 )}
                                 {error && (
                                     <div className="flex justify-start">
-                                        <div className="max-w-[80%] rounded-lg p-3 bg-red-500/30 border border-red-400">
+                                        <div className="max-w-[80%] rounded-lg p-3 bg-pink-400/50 border border-pink-400">
                                             <div className="text-red-300 flex items-center gap-2">
                                                 <MdError className="text-xl" />
-                                                <span>{error}</span>
+                                                <span>{"Please try again later"}</span>
                                             </div>
                                         </div>
                                     </div>
