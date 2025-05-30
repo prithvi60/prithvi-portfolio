@@ -28,7 +28,7 @@ const About = () => {
                 </div>
                 <div className="w-full lg:w-3/5 space-y-5 pb-3.5 font-sourceCodePro">
                     <p className="text-[clamp(1rem,1.15vw,1.3rem)] leading-6 font-secondary">
-                    {`Hey {bestie — insert your name here 👀} my name is Prithvi. I'm creative at heart, always wondering how I can connect with people. The answer is evolving through me writing independent music, obsessed over caring about people and creating software, at my agency Webibee to venting about life problems to close friends.`}  
+                    {`Hey! my name is Prithvi. I'm a creative at heart, always wondering how I can connect with people. The answer is always evolving through writing, obsessing over software workflows, building products at my agency Webibee and venting about life problems to close friends.`}  
                     </p>
                     <p className="text-[clamp(1rem,1.15vw,1.3rem)] leading-6 font-secondary">
                     It has been quite an exciting journey over the past few years and to wonder it all started with love - for travel atleast ;) More on this when life connects us !  
