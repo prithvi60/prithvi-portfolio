@@ -15,7 +15,7 @@ export async function POST(request) {
 
     // Call the portfolio API with the correct endpoint
     const apiResponse = await fetch(
-      "https://www.api.portfolio.webibee.com/run",
+      "https://api.portfolio.webibee.com/run",
       {
         method: "POST",
         headers: {
