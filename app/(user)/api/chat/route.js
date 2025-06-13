@@ -20,10 +20,8 @@ export async function POST(request) {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // Uncomment and add authentication if required:
-          // "Authorization": `Bearer ${process.env.PORTFOLIO_API_KEY}`
         },
-        credentials: "include",
+        credentials: "include", // ✅ Important for cookies
         body: JSON.stringify({
           prompt: prompt.trim(),
         }),
@@ -60,7 +58,15 @@ export async function POST(request) {
       );
     }
 
-    return NextResponse.json({ response, step });
+    // ✅ Forward Set-Cookie header if present
+    const rawSetCookie = apiResponse.headers.get("set-cookie");
+    const nextRes = NextResponse.json({ response, step });
+
+    if (rawSetCookie) {
+      nextRes.headers.set("set-cookie", rawSetCookie);
+    }
+
+    return nextRes;
   } catch (error) {
     console.error("Server Error:", error.message);
     return NextResponse.json(
