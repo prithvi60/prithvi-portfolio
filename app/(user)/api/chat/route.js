@@ -23,6 +23,7 @@ export async function POST(request) {
           // Uncomment and add authentication if required:
           // "Authorization": `Bearer ${process.env.PORTFOLIO_API_KEY}`
         },
+        credentials: "include",
         body: JSON.stringify({
           prompt: prompt.trim(),
         }),
