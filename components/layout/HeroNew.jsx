@@ -185,14 +185,14 @@ const HeroNew = () => {
                                                                                 .start();
                                                                         }}
                                                                     />
-                                                                    {message.img &&
+{/*                                                                     {message.img &&
                                                                         animationComplete === true && (
                                                                             <>
                                                                                 <a href="https://calendly.com/webibee/consultation" target="_blank" rel="noopener noreferrer"
                                                                                     aria-label="Book a consultation"
                                                                                     className="text-yellow-200 underline">https://calendly.com/webibee/consultation</a>
                                                                             </>
-                                                                        )}
+                                                                        )} */}
                                                                 </div>
                                                             ) : (
                                                                 <p>{message.content}</p>
