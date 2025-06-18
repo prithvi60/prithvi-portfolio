@@ -4,15 +4,17 @@ import React, {
     useState,
     useCallback,
     useLayoutEffect,
+    useMemo,
 } from "react";
 import { FaCircleArrowUp, FaCircleStop } from "react-icons/fa6";
 import { HashLoader } from "react-spinners";
 import { MdError } from "react-icons/md";
 import { motion, AnimatePresence } from "framer-motion";
 import Typewriter from "typewriter-effect";
-
+import { v4 as uuidv4 } from "uuid"; 
 
 const HeroNew = () => {
+    const sessionId = useMemo(() => uuidv4(), []);
     // const [isOpen, setIsOpen] = useState(false);
     // const [isMobile, setIsMobile] = useState(false);
     const [inputMessage, setInputMessage] = useState("");
@@ -66,7 +68,7 @@ const HeroNew = () => {
                 const response = await fetch("/api/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: safePrompt }),
+                    body: JSON.stringify({ prompt: safePrompt, session_id: sessionId,  }),
                 });
 
                 if (!response.ok) {
@@ -132,13 +134,12 @@ const HeroNew = () => {
                         <div className="space-y-5 md:space-y-10 flex flex-col justify-center items-center p-5">
                             <div className="block space-y-4 text-center lg:max-w-xl xl:max-w-3xl w-full">
                                 <h1 className="text-[clamp(1rem,2vw,2.25rem)] leading-8 2xl:leading-14 tracking-wider font-bold capitalize">
-                                    Curious how I help businesses grow with design, websites, and
-                                    AI?
+                                    Curious how I can help your businesses grow ?
                                 </h1>
                                 <p className="text-[clamp(0.75rem,1.25vw,1rem)] leading-4 sm:leading-6 font-normal">
-                                    Ask my assistant. It knows what I’ve done — and what might be
-                                    possible for you. Try: “I run a business — can you help?”
-                                    or “What do you charge?”
+                                    Ask my AI persona. I can outline what might be
+                                    possible for you. Try: “I run a sass business — can you help?”
+                                    or “What services do you offer?”
                                 </p>
                             </div>
                         </div>
